@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Lab · Walid SayedAhmed</title>
+<meta name="description" content="Two production AI agents built end-to-end: Specialist Digitalisierung & KI (German SME digitalization) and MEL Data Systems Specialist (donor-funded M&E). Interactive tools, full-agent workbench, and the architecture behind them.">
+<style>
+  :root{
+    --bg:#f7f8fa; --surface:#ffffff; --ink:#1f2430; --ink-soft:#5a6272;
+    --line:#e3e6ec; --accent:#4f5bd5; --accent-soft:#eef0fc; --accent-ink:#3a44a8;
+    --ok:#2e7d5b; --warn:#a86a00; --stop:#b3382c;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --radius:10px; --maxw:920px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important}}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  header.top{position:sticky;top:0;background:rgba(247,248,250,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+  .brand{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  .brand a{color:var(--ink)}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:var(--surface);padding:7px 12px;font-size:13px;font-family:var(--mono);color:var(--ink-soft);cursor:pointer}
+  .seg button.active{background:var(--accent);color:#fff}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .hero{padding:56px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:14px}
+  h1{font-size:clamp(28px,4.5vw,42px);line-height:1.12;letter-spacing:-.01em;font-weight:700;max-width:700px}
+  .lede{color:var(--ink-soft);max-width:660px;margin-top:14px;font-size:17px}
+  .tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:26px}
+  .tier{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .tier .t-k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+  .tier .t-t{font-weight:650;margin-top:4px}
+  .tier .t-d{font-size:13.5px;color:var(--ink-soft);margin-top:4px}
+
+  section.agent{padding:38px 0;border-top:1px solid var(--line)}
+  .stephead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .stepnum{font-family:var(--mono);font-size:14px;color:var(--accent-ink)}
+  h2{font-size:22px;font-weight:650;letter-spacing:-.005em}
+  .rolesub{color:var(--ink-soft);font-size:15px;max-width:700px;margin-bottom:18px}
+  .arch{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}
+  .arch .ph{font-family:var(--mono);font-size:12px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 10px}
+  .arch .arrow{color:var(--ink-soft);align-self:center;font-family:var(--mono)}
+  .gline{font-size:14px;color:var(--ink-soft);margin-bottom:16px}
+  .gline b{color:var(--ink);font-weight:600}
+  .cmds{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:6px 0 18px}
+  .cmd{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .cmd code{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink)}
+  .cmd span{display:block;font-size:13px;color:var(--ink-soft);margin-top:3px}
+  table.proof{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  table.proof th, table.proof td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  table.proof th{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);background:var(--accent-soft)}
+  table.proof tr:last-child td{border-bottom:0}
+  table.proof td.bad{color:var(--stop)} table.proof td.good{color:var(--ok)}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{display:inline-block;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 15px;font-size:14px;transition:border-color .15s;cursor:pointer}
+  .btn:hover{border-color:var(--accent);text-decoration:none}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-ink)}
+  .btn .sub{display:block;font-size:11px;font-family:var(--mono);opacity:.75;margin-top:1px}
+
+  section.how{padding:38px 0;border-top:1px solid var(--line)}
+  .how p{max-width:720px;color:var(--ink-soft);font-size:15px;margin-bottom:12px}
+  .pipeline{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .cta{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .cta .c-t{font-weight:650}
+  .cta .c-d{font-size:14px;color:var(--ink-soft);margin-top:3px}
+
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 48px;font-size:13px;color:var(--ink-soft)}
+  footer .fx{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap topbar">
+  <div class="brand"><a href="https://walidmohmed-ops.github.io/">Walid SayedAhmed</a> · <span data-i18n="brandTag">AI Agent Lab</span></div>
+  <div class="seg" role="group" aria-label="Language / Sprache">
+    <button id="langEn" class="active" aria-pressed="true">EN</button>
+    <button id="langDe" aria-pressed="false">DE</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+<div class="hero">
+  <div class="eyebrow" data-i18n="eyebrow">Proof of work · Built end-to-end, July 2026</div>
+  <h1 data-i18n="title">Two production AI agents — designed, stress-tested, shipped.</h1>
+  <p class="lede" data-i18n="lede">Not chatbot wrappers. Each agent runs a defined engagement engine with phase artifacts, always-on compliance gates, quantified outputs, and hard guardrails — benchmarked against production prompt architecture and stress-tested before release. Three ways in:</p>
+  <div class="tiers">
+    <div class="tier"><div class="t-k" data-i18n="t1k">Tier 1 · No login</div><div class="t-t" data-i18n="t1t">Interactive tools</div><div class="t-d" data-i18n="t1d">Deterministic scoring, gates and math — runs for every visitor, instantly.</div></div>
+    <div class="tier"><div class="t-k" data-i18n="t2k">Tier 2 · Free Claude account</div><div class="t-t" data-i18n="t2t">Agent Workbench</div><div class="t-d" data-i18n="t2d">Talk to the full field versions: multi-turn, all commands, live web verification.</div></div>
+    <div class="tier"><div class="t-k" data-i18n="t3k">Tier 3 · Engagement</div><div class="t-t" data-i18n="t3t">Delivery version</div><div class="t-d" data-i18n="t3d">The private skill produces client-ready files and runs your project with me accountable.</div></div>
+  </div>
+</div>
+
+<!-- Agent 01 -->
+<section class="agent" id="digi">
+  <div class="stephead"><span class="stepnum">01</span><h2>Specialist Digitalisierung &amp; KI</h2></div>
+  <p class="rolesub" data-i18n="digiRole">Digitalization and AI adoption for the German Mittelstand. Diagnostician first, tool-picker last: every recommendation arrives with Aufwand, Nutzen, Payback, Risiko and Konfidenz — and „keine KI nötig“ is a valid answer.</p>
+  <div class="arch">
+    <span class="ph" data-i18n="d0">0 Intake</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="d1">1 Prozess-Diagnose</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="d2">2 Use-Case-Portfolio</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="d3">3 Tool-Evaluation</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="d4">4 Business Case &amp; Roadmap</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="d5">5 Adoption &amp; Governance</span>
+  </div>
+  <p class="gline"><b data-i18n="gatesLbl">Always-on gates:</b> <span data-i18n="digiGates">EU AI Act (KI-VO, incl. the 2026 Digital-Omnibus timeline) · DSGVO · BetrVG § 87 works-council check · trade secrets</span></p>
+  <div class="cmds">
+    <div class="cmd"><code>/diagnose</code><span data-i18n="cD1">Process inventory with automation scores (APS 0–5), bottleneck ranking by hours</span></div>
+    <div class="cmd"><code>/usecases</code><span data-i18n="cD2">Prioritized use-case portfolio in a Quick-Win 2×2 — max two pilots, by design</span></div>
+    <div class="cmd"><code>/tools</code><span data-i18n="cD3">Weighted vendor scorecard incl. EU-hosting and 3-year cost; build-vs-buy rule</span></div>
+    <div class="cmd"><code>/roi</code><span data-i18n="cD4">Business case with open formulas, three scenarios, payback in months</span></div>
+    <div class="cmd"><code>/aiact</code><span data-i18n="cD5">Risk-class check per use case against the current KI-VO timeline</span></div>
+    <div class="cmd"><code>/foerderung</code><span data-i18n="cD6">Live-verified German funding radar — no dead programs recommended</span></div>
+    <div class="cmd"><code>/richtlinie</code><span data-i18n="cD7">Company AI policy draft: allowed tools, data classes, review duties</span></div>
+    <div class="cmd"><code>/schulung</code><span data-i18n="cD8">Role-based training matrix — Art. 4 KI-VO AI-literacy compliant</span></div>
+  </div>
+  <table class="proof">
+    <tr><th data-i18n="pH1">Stress test</th><th data-i18n="pH2">Generic AI does</th><th data-i18n="pH3">This agent does</th></tr>
+    <tr><td data-i18n="dP1a">“Screen job applicants with AI”</td><td class="bad" data-i18n="dP1b">Happily helps — straight into a high-risk AI system</td><td class="good" data-i18n="dP1c">Flags Annex III high-risk, designs “AI assists, human decides”, brings in works council + DSFA</td></tr>
+    <tr><td data-i18n="dP2a">“Is automation worth it?”</td><td class="bad" data-i18n="dP2b">“Up to 80 % savings!” — no basis</td><td class="good" data-i18n="dP2c">Visible formula, labelled assumptions, worst/base/best — decision-ready for a skeptical GF</td></tr>
+  </table>
+  <div class="btnrow">
+    <a class="btn primary" href="digi-check.html" data-i18n="btnTool1">Try the tool — no login</a>
+    <a class="btn wb-link hidden" href="#" target="_blank" rel="noopener"><span data-i18n="btnWb">Open Agent Workbench</span><span class="sub" data-i18n="btnWbSub">free Claude account</span></a>
+    <a class="btn" href="https://claude.ai/public/artifacts/561fd2ff-b5e7-4873-a050-979b67814fba" target="_blank" rel="noopener" data-i18n="btnArt">Tool as Claude artifact</a>
+  </div>
+</section>
+
+<!-- Agent 02 -->
+<section class="agent" id="mel">
+  <div class="stephead"><span class="stepnum">02</span><h2>MEL Data Systems Specialist</h2></div>
+  <p class="rolesub" data-i18n="melRole">Monitoring, evaluation and learning data systems for donor-funded programmes (EU/INTPA, GIZ, UN, FCDO, SDC, KfW, World Bank). Evidence-first and audit-ready: it never invents a number — unknowns become [TBD] with a collection plan.</p>
+  <div class="arch">
+    <span class="ph" data-i18n="m0">0 Intake</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m1">1 Results-QA</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m2">2 Indicator system</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m3">3 Collection design</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m4">4 Pipeline &amp; DQA</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m5">5 Analysis</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="m6">6 Reporting &amp; learning</span>
+  </div>
+  <p class="gline"><b data-i18n="gatesLbl2">Always-on gates:</b> <span data-i18n="melGates">Data protection &amp; consent · do-no-harm &amp; inclusion (GESI) · donor compliance (verified current) · evidence integrity</span></p>
+  <div class="cmds">
+    <div class="cmd"><code>/logframe-qa</code><span data-i18n="cM1">Vertical-logic and indicator audit with IQS score and fix list</span></div>
+    <div class="cmd"><code>/pirs</code><span data-i18n="cM2">Full indicator reference sheet — definition, disaggregation, source, limits</span></div>
+    <div class="cmd"><code>/xlsform</code><span data-i18n="cM3">Deployable Kobo/SurveyCTO form: skip logic, constraints, cascades, multi-language</span></div>
+    <div class="cmd"><code>/sample</code><span data-i18n="cM4">Sampling plan with stated assumptions — honest about what n can support</span></div>
+    <div class="cmd"><code>/clean</code><span data-i18n="cM5">Scripted cleaning pipeline (Power Query / pandas / tidyverse) with audit log</span></div>
+    <div class="cmd"><code>/dqa</code><span data-i18n="cM6">Data-quality assessment: validity, reliability, timeliness, precision, integrity</span></div>
+    <div class="cmd"><code>/methods-fit</code><span data-i18n="cM7">RBM backbone + MSC / Outcome Harvesting / Contribution Analysis — chosen by purpose</span></div>
+    <div class="cmd"><code>/dashboard-kit</code><span data-i18n="cM8">Power BI build kit: star schema, M queries, DAX measures, layout spec</span></div>
+  </div>
+  <table class="proof">
+    <tr><th data-i18n="pH1b">Stress test</th><th data-i18n="pH2b">Generic AI does</th><th data-i18n="pH3b">This agent does</th></tr>
+    <tr><td data-i18n="mP1a">“Build me a logframe”</td><td class="bad" data-i18n="mP1b">Invents baselines and round-number targets</td><td class="good" data-i18n="mP1c">Drafts with [TBD — baseline via tracer study] markers, lints every indicator, flags the stakeholder workshop</td></tr>
+    <tr><td data-i18n="mP2a">“Send the .pbix dashboard”</td><td class="bad" data-i18n="mP2b">Promises a binary it cannot authentically produce</td><td class="good" data-i18n="mP2c">Delivers an honest build kit that reconstructs it losslessly in Power BI Desktop</td></tr>
+  </table>
+  <div class="btnrow">
+    <a class="btn primary" href="mel-check.html" data-i18n="btnTool2">Try the tool — no login</a>
+    <a class="btn wb-link hidden" href="#" target="_blank" rel="noopener"><span data-i18n="btnWb2">Open Agent Workbench</span><span class="sub" data-i18n="btnWbSub2">free Claude account</span></a>
+    <a class="btn" href="https://claude.ai/public/artifacts/a6100e16-76ce-418b-9a00-01ec4f093dce" target="_blank" rel="noopener" data-i18n="btnArt2">Tool as Claude artifact</a>
+  </div>
+</section>
+
+<!-- How they're built -->
+<section class="how">
+  <div class="stephead"><span class="stepnum">·</span><h2 data-i18n="howH">How they're built</h2></div>
+  <p data-i18n="howP1">Each agent starts from a base prompt that gets benchmarked against production agent-prompt architecture, stress-tested against failure scenarios (invented data, compliance traps, stale facts, impossible file promises), and rebuilt as an operating system: identity and boundaries, a phased engagement engine with a defined artifact per phase, deterministic scoring, compliance gates, tool rules, anti-patterns, and a self-check the agent must pass before it answers.</p>
+  <div class="pipeline arch">
+    <span class="ph" data-i18n="hp1">Base prompt</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="hp2">Benchmark</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="hp3">Stress test</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="hp4">Rebuild as skill</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="hp5">Field version + tools</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="hp6">Ship</span>
+  </div>
+  <p data-i18n="howP2">What you can use here are the field versions and tools. The delivery versions run privately as skills: they additionally produce client-ready files — decision memos, AI policies, XLSForms, tracker workbooks, report drafts — and operate under my accountability inside real engagements.</p>
+  <div class="cta">
+    <div>
+      <div class="c-t" data-i18n="ctaT">Want an agent like this for your team — or these two on your project?</div>
+      <div class="c-d" data-i18n="ctaD">Scoping conversation costs nothing. Bring one process or one logframe.</div>
+    </div>
+    <a class="btn primary" href="https://walidmohmed-ops.github.io/#contact" data-i18n="ctaBtn">Get in touch</a>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap fx">
+  <div data-i18n="disclaimer">Field versions and tools are demos: outputs are drafts for professional verification, not legal advice.</div>
+  <div>© 2026 <a href="https://walidmohmed-ops.github.io/">Walid SayedAhmed</a></div>
+</div></footer>
+
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+var WORKBENCH_URL = "REPLACE_WITH_PUBLISHED_WORKBENCH_URL"; // paste the published Agent Workbench artifact URL, then the workbench buttons appear
+
+/* ================= I18N ================= */
+var LANG = (navigator.language || "en").toLowerCase().indexOf("de") === 0 ? "de" : "en";
+var T = {
+en:{
+  brandTag:"AI Agent Lab",
+  eyebrow:"Proof of work · Built end-to-end, July 2026",
+  title:"Two production AI agents — designed, stress-tested, shipped.",
+  lede:"Not chatbot wrappers. Each agent runs a defined engagement engine with phase artifacts, always-on compliance gates, quantified outputs, and hard guardrails — benchmarked against production prompt architecture and stress-tested before release. Three ways in:",
+  t1k:"Tier 1 · No login", t1t:"Interactive tools", t1d:"Deterministic scoring, gates and math — runs for every visitor, instantly.",
+  t2k:"Tier 2 · Free Claude account", t2t:"Agent Workbench", t2d:"Talk to the full field versions: multi-turn, all commands, live web verification.",
+  t3k:"Tier 3 · Engagement", t3t:"Delivery version", t3d:"The private skill produces client-ready files and runs your project with me accountable.",
+  digiRole:"Digitalization and AI adoption for the German Mittelstand. Diagnostician first, tool-picker last: every recommendation arrives with Aufwand, Nutzen, Payback, Risiko and Konfidenz — and „keine KI nötig“ is a valid answer.",
+  d0:"0 Intake", d1:"1 Process diagnosis", d2:"2 Use-case portfolio", d3:"3 Tool evaluation", d4:"4 Business case & roadmap", d5:"5 Adoption & governance",
+  gatesLbl:"Always-on gates:", digiGates:"EU AI Act (KI-VO, incl. the 2026 Digital-Omnibus timeline) · DSGVO · BetrVG § 87 works-council check · trade secrets",
+  cD1:"Process inventory with automation scores (APS 0–5), bottleneck ranking by hours",
+  cD2:"Prioritized use-case portfolio in a Quick-Win 2×2 — max two pilots, by design",
+  cD3:"Weighted vendor scorecard incl. EU-hosting and 3-year cost; build-vs-buy rule",
+  cD4:"Business case with open formulas, three scenarios, payback in months",
+  cD5:"Risk-class check per use case against the current KI-VO timeline",
+  cD6:"Live-verified German funding radar — no dead programs recommended",
+  cD7:"Company AI policy draft: allowed tools, data classes, review duties",
+  cD8:"Role-based training matrix — Art. 4 KI-VO AI-literacy compliant",
+  pH1:"Stress test", pH2:"Generic AI does", pH3:"This agent does",
+  dP1a:"“Screen job applicants with AI”", dP1b:"Happily helps — straight into a high-risk AI system", dP1c:"Flags Annex III high-risk, designs “AI assists, human decides”, brings in works council + DSFA",
+  dP2a:"“Is automation worth it?”", dP2b:"“Up to 80 % savings!” — no basis", dP2c:"Visible formula, labelled assumptions, worst/base/best — decision-ready for a skeptical GF",
+  btnTool1:"Try the tool — no login", btnWb:"Open Agent Workbench", btnWbSub:"free Claude account", btnArt:"Tool as Claude artifact",
+  melRole:"Monitoring, evaluation and learning data systems for donor-funded programmes (EU/INTPA, GIZ, UN, FCDO, SDC, KfW, World Bank). Evidence-first and audit-ready: it never invents a number — unknowns become [TBD] with a collection plan.",
+  m0:"0 Intake", m1:"1 Results-QA", m2:"2 Indicator system", m3:"3 Collection design", m4:"4 Pipeline & DQA", m5:"5 Analysis", m6:"6 Reporting & learning",
+  gatesLbl2:"Always-on gates:", melGates:"Data protection & consent · do-no-harm & inclusion (GESI) · donor compliance (verified current) · evidence integrity",
+  cM1:"Vertical-logic and indicator audit with IQS score and fix list",
+  cM2:"Full indicator reference sheet — definition, disaggregation, source, limits",
+  cM3:"Deployable Kobo/SurveyCTO form: skip logic, constraints, cascades, multi-language",
+  cM4:"Sampling plan with stated assumptions — honest about what n can support",
+  cM5:"Scripted cleaning pipeline (Power Query / pandas / tidyverse) with audit log",
+  cM6:"Data-quality assessment: validity, reliability, timeliness, precision, integrity",
+  cM7:"RBM backbone + MSC / Outcome Harvesting / Contribution Analysis — chosen by purpose",
+  cM8:"Power BI build kit: star schema, M queries, DAX measures, layout spec",
+  pH1b:"Stress test", pH2b:"Generic AI does", pH3b:"This agent does",
+  mP1a:"“Build me a logframe”", mP1b:"Invents baselines and round-number targets", mP1c:"Drafts with [TBD — baseline via tracer study] markers, lints every indicator, flags the stakeholder workshop",
+  mP2a:"“Send the .pbix dashboard”", mP2b:"Promises a binary it cannot authentically produce", mP2c:"Delivers an honest build kit that reconstructs it losslessly in Power BI Desktop",
+  btnTool2:"Try the tool — no login", btnWb2:"Open Agent Workbench", btnWbSub2:"free Claude account", btnArt2:"Tool as Claude artifact",
+  howH:"How they're built",
+  howP1:"Each agent starts from a base prompt that gets benchmarked against production agent-prompt architecture, stress-tested against failure scenarios (invented data, compliance traps, stale facts, impossible file promises), and rebuilt as an operating system: identity and boundaries, a phased engagement engine with a defined artifact per phase, deterministic scoring, compliance gates, tool rules, anti-patterns, and a self-check the agent must pass before it answers.",
+  hp1:"Base prompt", hp2:"Benchmark", hp3:"Stress test", hp4:"Rebuild as skill", hp5:"Field version + tools", hp6:"Ship",
+  howP2:"What you can use here are the field versions and tools. The delivery versions run privately as skills: they additionally produce client-ready files — decision memos, AI policies, XLSForms, tracker workbooks, report drafts — and operate under my accountability inside real engagements.",
+  ctaT:"Want an agent like this for your team — or these two on your project?",
+  ctaD:"Scoping conversation costs nothing. Bring one process or one logframe.",
+  ctaBtn:"Get in touch",
+  disclaimer:"Field versions and tools are demos: outputs are drafts for professional verification, not legal advice."
+},
+de:{
+  brandTag:"AI Agent Lab",
+  eyebrow:"Proof of Work · End-to-end gebaut, Juli 2026",
+  title:"Zwei produktionsreife KI-Agenten — konzipiert, gestresstestet, ausgeliefert.",
+  lede:"Keine Chatbot-Hüllen. Jeder Agent durchläuft eine definierte Engagement-Engine mit Phasen-Artefakten, permanenten Compliance-Gates, quantifizierten Ergebnissen und harten Leitplanken — benchmarkt gegen Produktions-Prompt-Architektur und vor Release gestresstestet. Drei Zugänge:",
+  t1k:"Stufe 1 · Ohne Login", t1t:"Interaktive Tools", t1d:"Deterministische Bewertung, Gates und Rechnung — läuft sofort für jeden Besucher.",
+  t2k:"Stufe 2 · Kostenloses Claude-Konto", t2t:"Agent Workbench", t2d:"Mit den vollen Feldversionen sprechen: mehrstufig, alle Befehle, Live-Webverifizierung.",
+  t3k:"Stufe 3 · Engagement", t3t:"Delivery-Version", t3d:"Der private Skill erzeugt kundenfertige Dateien und begleitet Ihr Projekt — mit mir in der Verantwortung.",
+  digiRole:"Digitalisierung und KI-Einführung im deutschen Mittelstand. Erst Diagnose, dann Tool-Auswahl: Jede Empfehlung kommt mit Aufwand, Nutzen, Payback, Risiko und Konfidenz — und „keine KI nötig“ ist eine gültige Antwort.",
+  d0:"0 Intake", d1:"1 Prozess-Diagnose", d2:"2 Use-Case-Portfolio", d3:"3 Tool-Evaluation", d4:"4 Business Case & Roadmap", d5:"5 Adoption & Governance",
+  gatesLbl:"Permanente Gates:", digiGates:"EU AI Act (KI-VO, inkl. Digital-Omnibus-Zeitplan 2026) · DSGVO · BetrVG § 87 Mitbestimmung · Geheimnisschutz",
+  cD1:"Prozessinventar mit Automatisierungs-Scores (APS 0–5), Engpass-Ranking nach Stunden",
+  cD2:"Priorisiertes Use-Case-Portfolio im Quick-Win-2×2 — bewusst maximal zwei Piloten",
+  cD3:"Gewichtete Tool-Scorecard inkl. EU-Hosting und 3-Jahres-Kosten; Build-vs-Buy-Regel",
+  cD4:"Business Case mit offenen Formeln, drei Szenarien, Payback in Monaten",
+  cD5:"Risikoklassen-Prüfung je Use Case gegen den aktuellen KI-VO-Zeitplan",
+  cD6:"Live-verifizierter Förder-Radar — keine ausgelaufenen Programme",
+  cD7:"KI-Richtlinien-Entwurf: erlaubte Tools, Datenklassen, Prüfpflichten",
+  cD8:"Rollenbasierte Schulungsmatrix — konform mit Art. 4 KI-VO (KI-Kompetenz)",
+  pH1:"Stresstest", pH2:"Generische KI", pH3:"Dieser Agent",
+  dP1a:"„Bewerber mit KI vorsortieren“", dP1b:"Hilft bereitwillig — direkt ins Hochrisiko-System", dP1c:"Meldet Anhang-III-Hochrisiko, Design „KI assistiert, Mensch entscheidet“, bindet Betriebsrat + DSFA ein",
+  dP2a:"„Lohnt sich Automatisierung?“", dP2b:"„Bis zu 80 % Einsparung!“ — ohne Basis", dP2c:"Sichtbare Formel, markierte Annahmen, Worst/Basis/Best — entscheidungsreif für skeptische GF",
+  btnTool1:"Tool testen — ohne Login", btnWb:"Agent Workbench öffnen", btnWbSub:"kostenloses Claude-Konto", btnArt:"Tool als Claude-Artefakt",
+  melRole:"M&E-Datensysteme geberfinanzierter Programme (EU/INTPA, GIZ, UN, FCDO, SDC, KfW, Weltbank). Evidenz-first und audit-fest: Zahlen werden nie erfunden — Unbekanntes wird [TBD] mit Erhebungsplan.",
+  m0:"0 Intake", m1:"1 Wirkungsgefüge-QA", m2:"2 Indikatorensystem", m3:"3 Erhebungsdesign", m4:"4 Pipeline & DQA", m5:"5 Analyse", m6:"6 Reporting & Lernen",
+  gatesLbl2:"Permanente Gates:", melGates:"Datenschutz & Einwilligung · Do-no-harm & Inklusion (GESI) · Geber-Compliance (aktuell verifiziert) · Evidenz-Integrität",
+  cM1:"Logik- und Indikator-Audit mit IQS-Score und Korrekturliste",
+  cM2:"Vollständiges Indikator-Referenzblatt — Definition, Disaggregierung, Quelle, Grenzen",
+  cM3:"Einsatzfertiges Kobo/SurveyCTO-Formular: Skip-Logik, Constraints, Kaskaden, mehrsprachig",
+  cM4:"Stichprobenplan mit offenen Annahmen — ehrlich über die Aussagekraft von n",
+  cM5:"Skriptbasierte Bereinigungs-Pipeline (Power Query / pandas / tidyverse) mit Audit-Log",
+  cM6:"Datenqualitäts-Assessment: Validität, Reliabilität, Aktualität, Präzision, Integrität",
+  cM7:"RBM-Rückgrat + MSC / Outcome Harvesting / Contribution Analysis — nach Zweck gewählt",
+  cM8:"Power-BI-Build-Kit: Sternschema, M-Queries, DAX-Kennzahlen, Layout-Spezifikation",
+  pH1b:"Stresstest", pH2b:"Generische KI", pH3b:"Dieser Agent",
+  mP1a:"„Bau mir ein Logframe“", mP1b:"Erfindet Baselines und runde Zielwerte", mP1c:"Entwirft mit [TBD — Baseline via Tracer Study], lintet jeden Indikator, verweist auf den Stakeholder-Workshop",
+  mP2a:"„Schick das .pbix-Dashboard“", mP2b:"Verspricht eine Binärdatei, die nicht echt erzeugbar ist", mP2c:"Liefert ein ehrliches Build-Kit, das sie verlustfrei in Power BI Desktop rekonstruiert",
+  btnTool2:"Tool testen — ohne Login", btnWb2:"Agent Workbench öffnen", btnWbSub2:"kostenloses Claude-Konto", btnArt2:"Tool als Claude-Artefakt",
+  howH:"So sind sie gebaut",
+  howP1:"Jeder Agent startet als Basis-Prompt, wird gegen Produktions-Prompt-Architektur benchmarkt, gegen Fehlerszenarien gestresstestet (erfundene Daten, Compliance-Fallen, veraltete Fakten, unmögliche Dateiversprechen) und als Betriebssystem neu aufgebaut: Identität und Grenzen, Phasen-Engine mit definiertem Artefakt je Phase, deterministische Bewertung, Compliance-Gates, Tool-Regeln, Anti-Patterns und ein Selbstcheck vor jeder Antwort.",
+  hp1:"Basis-Prompt", hp2:"Benchmark", hp3:"Stresstest", hp4:"Neubau als Skill", hp5:"Feldversion + Tools", hp6:"Auslieferung",
+  howP2:"Hier nutzbar sind die Feldversionen und Tools. Die Delivery-Versionen laufen privat als Skills: Sie erzeugen zusätzlich kundenfertige Dateien — Entscheidungsvorlagen, KI-Richtlinien, XLSForms, Tracker-Workbooks, Berichtsentwürfe — und arbeiten in realen Engagements unter meiner Verantwortung.",
+  ctaT:"Einen solchen Agenten für Ihr Team — oder diese beiden in Ihrem Projekt?",
+  ctaD:"Ein Scoping-Gespräch kostet nichts. Bringen Sie einen Prozess oder ein Logframe mit.",
+  ctaBtn:"Kontakt aufnehmen",
+  disclaimer:"Feldversionen und Tools sind Demos: Ergebnisse sind Entwürfe zur fachlichen Prüfung, keine Rechtsberatung."
+}};
+function t(k){ return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  var nodes = document.querySelectorAll("[data-i18n]");
+  for (var i=0;i<nodes.length;i++){ nodes[i].innerHTML = t(nodes[i].getAttribute("data-i18n")); }
+  document.getElementById("langEn").classList.toggle("active", LANG==="en");
+  document.getElementById("langDe").classList.toggle("active", LANG==="de");
+  document.getElementById("langEn").setAttribute("aria-pressed", LANG==="en");
+  document.getElementById("langDe").setAttribute("aria-pressed", LANG==="de");
+}
+(function init(){
+  document.getElementById("langEn").addEventListener("click", function(){ LANG="en"; applyLang(); });
+  document.getElementById("langDe").addEventListener("click", function(){ LANG="de"; applyLang(); });
+  if (WORKBENCH_URL.indexOf("REPLACE_WITH") !== 0){
+    var links = document.querySelectorAll(".wb-link");
+    for (var i=0;i<links.length;i++){ links[i].href = WORKBENCH_URL; links[i].classList.remove("hidden"); }
+  }
+  applyLang();
+})();
+</script>
+</body>
+</html>

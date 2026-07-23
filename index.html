@@ -458,9 +458,9 @@
           <span class="d" data-i="r2d">A results-based M&amp;E system consolidating eight country programmes — indicators, quarterly status and verification tracking.</span>
         </div>
         <div class="row">
-          <span class="t" data-i="r3t">AI expert agents</span>
-          <span class="na" data-i="r3na">Walk-through on request</span>
-          <span class="d" data-i="r3d">Reusable agents I specified and built: a private-sector &amp; donor review panel, a Germany market-adaptability scout, a PMP study assistant.</span>
+          <span class="t" data-i="r3t">AI Agent Lab — two production agents</span>
+          <a class="go" href="agents.html">Live ↗</a>
+          <span class="d" data-i="r3d">Specialist Digitalisierung &amp; KI and MEL Data Systems Specialist — benchmarked, stress-tested and shipped in three tiers: no-login tools, a full agent workbench, private delivery skills.</span>
         </div>
         <div class="row">
           <span class="t" data-i="r4t">German Traffic Signs Trainer</span>
@@ -643,7 +643,8 @@
         {t:{en:"Copy email",de:"E-Mail kopieren"},k:"@",f:function(){copyTxt("walid.mohmed@gmail.com",function(){showToast("walid.mohmed@gmail.com"+COPIED[LANG]);});}},
         {t:{en:"Open GitHub",de:"GitHub öffnen"},k:"↗",f:function(){window.open("https://github.com/walidmohmed-ops","_blank");}},
         {t:{en:"Open PMP Preparation Suite",de:"PMP Preparation Suite öffnen"},k:"↗",f:function(){window.open("https://claude.ai/public/artifacts/40a21d4e-3797-493d-9ad8-5ba840e508ea","_blank");}},
-        {t:{en:"Open CV Stress-Test",de:"CV Stress-Test öffnen"},k:"↗",f:function(){window.open("https://claude.ai/public/artifacts/760c1512-2075-4fbe-95a5-c148f2439fb9","_blank");}}
+        {t:{en:"Open CV Stress-Test",de:"CV Stress-Test öffnen"},k:"↗",f:function(){window.open("https://claude.ai/public/artifacts/760c1512-2075-4fbe-95a5-c148f2439fb9","_blank");}},
+        {t:{en:"Open AI Agent Lab",de:"AI Agent Lab öffnen"},k:"↗",f:function(){location.href="agents.html";}}
       ],
       cmdSel=0, cmdShown=CMDS, lastFocus=null;
   function renderCmds(q){
@@ -750,7 +751,10 @@
       rconf=document.getElementById("rconf"),rwhy=document.getElementById("rwhy"),
       rsend=document.getElementById("rsend");
   function render(r,text){
-    rsend.href="mailto:walid.mohmed@gmail.com?subject="+encodeURIComponent("["+r.label+"] Portfolio enquiry")+"&body="+encodeURIComponent(text);
+    var subj="["+r.label+"] Portfolio enquiry";
+    rsend.href="mailto:walid.mohmed@gmail.com?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(text);
+    rsend.setAttribute("data-subject",subj);
+    rsend.setAttribute("data-note",text);
     result.classList.add("show");
     if(rm){ rcat.textContent=r.label; rconf.textContent=r.conf||""; rwhy.textContent=r.why||""; return; }
     rcat.textContent=""; rconf.textContent=""; rwhy.textContent="";
@@ -782,6 +786,12 @@
     });
   }
   run.addEventListener("click",go);
+  rsend.addEventListener("click",function(e){
+    e.preventDefault();
+    var pkg="To: walid.mohmed@gmail.com\nSubject: "+(rsend.getAttribute("data-subject")||"Portfolio enquiry")+"\n\n"+(rsend.getAttribute("data-note")||"");
+    copyTxt(pkg,function(){ showToast(LANG==="de"?"Notiz kopiert — falls kein Mailprogramm aufgeht: an walid.mohmed@gmail.com einfügen ✓":"Note copied — if no mail app opens, paste it in an email to walid.mohmed@gmail.com ✓"); });
+    window.location.href=rsend.href;
+  });
   msg.addEventListener("keydown",function(e){ if((e.metaKey||e.ctrlKey)&&e.key==="Enter") go(); });
 
   /* ---------- i18n ---------- */
@@ -836,8 +846,8 @@
     r1d:'Eine KI-App, die einen Lebenslauf gegen eine Zielrolle testet — pass / borderline / fail mit Begründung und Fix-it-Chat.',
     r2t:'Multi-Länder-M&amp;E-Dashboard', r_dl:'Download ↓',
     r2d:'Ein ergebnisorientiertes M&amp;E-System, das acht Länderprogramme konsolidiert — Indikatoren, Quartalsstatus und Verifizierung.',
-    r3t:'KI-Expertenagenten', r3na:'Demo auf Anfrage',
-    r3d:'Wiederverwendbare Agenten nach eigener Spezifikation: ein Privatsektor- &amp; Geber-Review-Panel, ein Deutschland-Markt-Scout, ein PMP-Lernassistent.',
+    r3t:'AI Agent Lab — zwei Produktions-Agenten',
+    r3d:'Specialist Digitalisierung &amp; KI und MEL Data Systems Specialist — benchmarkt, gestresstestet, in drei Stufen ausgeliefert: Tools ohne Login, voller Agent-Workbench, private Delivery-Skills.',
     r4t:'Verkehrszeichen-Trainer',
     r4d:'Eine interaktive Lern-App mit 130 Karten, Vektor-Verkehrszeichen und Spaced Repetition.',
     r5t:'Zweisprachiger KI-Evaluationsreport',

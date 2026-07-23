@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEL Indicator Quality Check · Walid SayedAhmed</title>
+<meta name="description" content="Interactive MEL/M&E tool: live indicator linting, quality scoring (IQS), ethics and compliance gates, and AI-assisted PIRS drafting for donor-funded programmes.">
+<style>
+  :root{
+    --bg:#f7f8fa; --surface:#ffffff; --ink:#1f2430; --ink-soft:#5a6272;
+    --line:#e3e6ec; --accent:#4f5bd5; --accent-soft:#eef0fc; --accent-ink:#3a44a8;
+    --ok:#2e7d5b; --warn:#a86a00; --stop:#b3382c;
+    --ok-bg:#e8f4ee; --warn-bg:#fdf3e0; --stop-bg:#faeae8;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --radius:10px; --maxw:880px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  header.top{position:sticky;top:0;background:rgba(247,248,250,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+  .brand{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  .brand a{color:var(--ink)}
+  .topbtns{display:flex;gap:8px;align-items:center}
+  button{font-family:var(--sans);cursor:pointer}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:14px;transition:border-color .15s, background .15s}
+  .btn:hover{border-color:var(--accent)}
+  .btn:focus-visible,.seg button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-ink)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:var(--surface);padding:7px 12px;font-size:13px;font-family:var(--mono);color:var(--ink-soft)}
+  .seg button.active{background:var(--accent);color:#fff}
+
+  .hero{padding:56px 0 28px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:14px}
+  h1{font-size:clamp(28px,4.5vw,40px);line-height:1.15;letter-spacing:-.01em;font-weight:700;max-width:680px}
+  .lede{color:var(--ink-soft);max-width:620px;margin-top:14px;font-size:17px}
+
+  section.step{padding:34px 0;border-top:1px solid var(--line)}
+  .stephead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .stepnum{font-family:var(--mono);font-size:14px;color:var(--accent-ink)}
+  h2{font-size:21px;font-weight:650;letter-spacing:-.005em}
+  .stepsub{color:var(--ink-soft);font-size:14.5px;max-width:660px;margin-bottom:20px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+  .field .hint{font-weight:400;color:var(--ink-soft)}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:9px 11px;font-size:15px;font-family:var(--sans);color:var(--ink)}
+  textarea{min-height:88px;resize:vertical;line-height:1.5}
+
+  .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;min-height:26px}
+  .flag{font-family:var(--mono);font-size:11.5px;border-radius:6px;padding:3px 8px;border:1px solid}
+  .flag.bad{color:var(--warn);background:var(--warn-bg);border-color:#f2e2c0}
+  .flag.good{color:var(--ok);background:var(--ok-bg);border-color:#cde6da}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:18px}
+  .readout-title{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+  .iqsrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .iqsval{font-family:var(--mono);font-size:38px;font-weight:600}
+  .iqsval small{font-size:16px;color:var(--ink-soft);font-weight:400}
+  .iqsbar{flex:1;min-width:180px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+  .iqsbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+  .iqsnote{font-size:14px;color:var(--ink-soft);width:100%}
+  .iqsbreak{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink-soft)}
+
+  .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .gate{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px}
+  .gate .g-name{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:8px}
+  .light{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+  .g-ok .light{background:var(--ok)} .g-warn .light{background:var(--warn)} .g-stop .light{background:var(--stop)}
+  .g-verdict{font-weight:650;font-size:14.5px}
+  .g-ok .g-verdict{color:var(--ok)} .g-warn .g-verdict{color:var(--warn)} .g-stop .g-verdict{color:var(--stop)}
+  .g-note{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.45}
+  .stand{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:12px}
+
+  .verdict{margin-top:16px;padding:14px 16px;border-radius:var(--radius);font-weight:650;border:1px solid var(--line)}
+  .verdict.rr{background:var(--ok-bg);color:var(--ok);border-color:#cde6da}
+  .verdict.nd{background:var(--warn-bg);color:var(--warn);border-color:#f2e2c0}
+  .verdict.rd{background:var(--stop-bg);color:var(--stop);border-color:#f0d2ce}
+
+  .ai-out{margin-top:16px;font-size:15px}
+  .ai-out p{margin-bottom:12px}
+  .ai-out .sec-h{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin:16px 0 6px}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{font-size:13.5px;color:var(--ink-soft)}
+
+  .arch{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .arch .ph{font-family:var(--mono);font-size:12px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 10px}
+  .arch .arrow{color:var(--ink-soft);align-self:center;font-family:var(--mono)}
+
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 48px;font-size:13px;color:var(--ink-soft)}
+  footer .fx{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:14px;padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap topbar">
+  <div class="brand"><a href="https://walidmohmed-ops.github.io/" target="_blank" rel="noopener">Walid SayedAhmed</a> · <span data-i18n="brandTag">MEL Data Systems</span></div>
+  <div class="topbtns">
+    <button class="btn" id="exampleBtn" data-i18n="loadExample">Load example</button>
+    <div class="seg" role="group" aria-label="Language / Sprache">
+      <button id="langEn" class="active" aria-pressed="true">EN</button>
+      <button id="langDe" aria-pressed="false">DE</button>
+    </div>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+<div class="hero">
+  <div class="eyebrow" data-i18n="eyebrow">Live demo · Interactive M&amp;E tool</div>
+  <h1 data-i18n="title">MEL Indicator Quality Check</h1>
+  <p class="lede" data-i18n="lede">Paste one indicator from your logframe. The tool lints the wording as you type, scores its measurability, runs four ethics and compliance gates, and — if you want — has the agent rewrite it donor-ready with a mini reference sheet.</p>
+</div>
+
+<!-- 01 Indicator & context -->
+<section class="step" id="s1">
+  <div class="stephead"><span class="stepnum">01</span><h2 data-i18n="s1h">Indicator &amp; context</h2></div>
+  <p class="stepsub" data-i18n="s1sub">One indicator at a time — exactly as it appears in your results framework.</p>
+  <div class="field" style="margin-bottom:14px">
+    <label for="ind" data-i18n="fInd">Indicator statement</label>
+    <textarea id="ind" data-i18n-ph="phInd" placeholder="e.g. % of trained youth in wage or self-employment 6 months after graduation"></textarea>
+    <div class="flags" id="flagBox" aria-live="polite"></div>
+  </div>
+  <div class="grid">
+    <div class="field"><label for="level" data-i18n="fLevel">Result level</label>
+      <select id="level">
+        <option value="output" data-i18n="oOutput">Output</option>
+        <option value="outcome" selected data-i18n="oOutcome">Outcome</option>
+        <option value="impact" data-i18n="oImpact">Impact</option>
+      </select></div>
+    <div class="field"><label for="donor" data-i18n="fDonor">Donor context</label>
+      <select id="donor">
+        <option value="eu">EU / INTPA</option><option value="giz">GIZ / BMZ</option><option value="fcdo">FCDO</option><option value="un" data-i18n="oUn">UN agency</option><option value="wb">World Bank / AfDB</option><option value="other" selected data-i18n="oOther">Other / none</option>
+      </select></div>
+    <div class="field"><label for="itype" data-i18n="fItype">Indicator type</label>
+      <select id="itype">
+        <option value="quant" selected data-i18n="oQuant">Quantitative</option>
+        <option value="qual" data-i18n="oQual">Qualitative</option>
+      </select></div>
+    <div class="field"><label for="pii" data-i18n="fPii">Personal data collected for it?</label>
+      <select id="pii"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+  </div>
+</section>
+
+<!-- 02 Anatomy -->
+<section class="step" id="s2">
+  <div class="stephead"><span class="stepnum">02</span><h2 data-i18n="s2h">Indicator anatomy</h2></div>
+  <p class="stepsub" data-i18n="s2sub">A statement is only the surface. These seven elements decide whether the indicator can actually be reported — they feed 55&nbsp;% of the score.</p>
+  <div class="grid">
+    <div class="field"><label for="unit" data-i18n="fUnit">Unit of measure defined?</label>
+      <select id="unit"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+    <div class="field"><label for="base" data-i18n="fBase">Baseline</label>
+      <select id="base"><option value="none" data-i18n="oBaseNone">None</option><option value="planned" data-i18n="oBasePlan">Collection planned</option><option value="known" data-i18n="oBaseKnown">Value established</option></select></div>
+    <div class="field"><label for="target" data-i18n="fTarget">Target with date set?</label>
+      <select id="target"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+    <div class="field"><label for="source" data-i18n="fSource">Data source named?</label>
+      <select id="source"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+    <div class="field"><label for="freq" data-i18n="fFreq">Collection frequency set?</label>
+      <select id="freq"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+    <div class="field"><label for="resp" data-i18n="fResp">Responsible party assigned?</label>
+      <select id="resp"><option value="no" data-i18n="oNo">No</option><option value="yes" data-i18n="oYes">Yes</option></select></div>
+    <div class="field"><label for="disagg" data-i18n="fDisagg">Disaggregation</label>
+      <select id="disagg">
+        <option value="0" data-i18n="oDis0">None</option>
+        <option value="0.4" data-i18n="oDis1">Sex only</option>
+        <option value="0.7" data-i18n="oDis2">Sex + age</option>
+        <option value="1" data-i18n="oDis3">Sex + age + disability (+ geo)</option>
+      </select></div>
+  </div>
+</section>
+
+<!-- 03 Readout -->
+<section class="step" id="s3">
+  <div class="stephead"><span class="stepnum">03</span><h2 data-i18n="s3h">Quality readout</h2></div>
+  <p class="stepsub" data-i18n="s3sub">IQS = 55&nbsp;% anatomy completeness + 45&nbsp;% statement quality. The gates run the checks a donor auditor would.</p>
+  <div class="card">
+    <div class="readout-title" data-i18n="iqsReadout">IQS — Indicator Quality Score</div>
+    <div class="iqsrow">
+      <div class="iqsval"><span id="iqsVal">0.0</span><small> / 5</small></div>
+      <div class="iqsbar"><i id="iqsBar"></i></div>
+      <div class="iqsnote" id="iqsNote"></div>
+    </div>
+    <div class="iqsbreak" id="iqsBreak"></div>
+    <div class="verdict" id="verdictBox"></div>
+  </div>
+  <div class="card">
+    <div class="readout-title" data-i18n="gatesReadout">Ethics &amp; compliance gates</div>
+    <div class="gates" id="gates"></div>
+    <div class="stand" data-i18n="stand">Reference status: mid-2026 (incl. post-2025 US foreign-assistance restructuring). Verify donor specifics before client use. Not legal advice.</div>
+  </div>
+</section>
+
+<!-- 04 AI layer -->
+<section class="step" id="s4">
+  <div class="stephead"><span class="stepnum">04</span><h2 data-i18n="s4h">Agent rewrite &amp; mini-PIRS</h2></div>
+  <p class="stepsub" data-i18n="s4sub">Steps 01–03 are deterministic logic — they run without AI. Here the agent takes over: assessment, a donor-ready rewrite (split if double-barreled), and a compact reference sheet. It will not invent baseline or target values — it proposes how to establish them.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn primary" id="aiBtn" data-i18n="aiBtn">Run agent analysis</button>
+    <a class="btn hidden" id="artifactLink" target="_blank" rel="noopener" data-i18n="aiLink">Open full version in Claude</a>
+    <button class="btn" id="copyBtn" data-i18n="copyBtn">Copy result &amp; open contact</button>
+  </div>
+  <div class="card hidden" id="aiCard"><div class="readout-title" data-i18n="aiOutTitle">Agent analysis (demo model)</div><div class="ai-out" id="aiOut"></div></div>
+</section>
+
+<!-- Under the hood -->
+<section class="step">
+  <div class="stephead"><span class="stepnum">·</span><h2 data-i18n="archH">Under the hood</h2></div>
+  <p class="stepsub" data-i18n="archSub">This demo is the condensed layer of a MEL data-systems delivery agent (skill architecture) I built for donor-funded programme work. The full version runs the complete MEL data lifecycle in seven phases with a defined artifact per phase:</p>
+  <div class="arch">
+    <span class="ph" data-i18n="p0">0 Intake</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p1">1 Results architecture QA</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p2">2 Indicator system</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p3">3 Collection design</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p4">4 Pipeline &amp; DQA</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p5">5 Analysis</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p6">6 Reporting &amp; learning</span>
+  </div>
+  <p class="note" data-i18n="archNote">Four gates run on every deliverable: data protection &amp; consent · do-no-harm &amp; inclusion · donor compliance · evidence integrity. Core principles: never invent data, full indicator anatomy, attribution honesty, reproducible pipelines — and AI output is a draft for human verification, by design.</p>
+</section>
+
+</main>
+
+<footer><div class="wrap fx">
+  <div data-i18n="disclaimer">Demo tool. Heuristic results based on your inputs; a full indicator review considers programme context. Not legal advice.</div>
+  <div>© 2026 <a href="https://walidmohmed-ops.github.io/" target="_blank" rel="noopener">Walid SayedAhmed</a></div>
+</div></footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+var ARTIFACT_URL = "https://claude.ai/public/artifacts/a6100e16-76ce-418b-9a00-01ec4f093dce";
+var PORTFOLIO_CONTACT = "https://walidmohmed-ops.github.io/#contact";
+
+/* ================= I18N ================= */
+var LANG = (navigator.language || "en").toLowerCase().indexOf("de") === 0 ? "de" : "en";
+var T = {
+en:{
+  brandTag:"MEL Data Systems", loadExample:"Load example",
+  eyebrow:"Live demo · Interactive M&E tool",
+  title:"MEL Indicator Quality Check",
+  lede:"Paste one indicator from your logframe. The tool lints the wording as you type, scores its measurability, runs four ethics and compliance gates, and — if you want — has the agent rewrite it donor-ready with a mini reference sheet.",
+  s1h:"Indicator & context", s1sub:"One indicator at a time — exactly as it appears in your results framework.",
+  fInd:"Indicator statement", phInd:"e.g. % of trained youth in wage or self-employment 6 months after graduation",
+  fLevel:"Result level", oOutput:"Output", oOutcome:"Outcome", oImpact:"Impact",
+  fDonor:"Donor context", oUn:"UN agency", oOther:"Other / none",
+  fItype:"Indicator type", oQuant:"Quantitative", oQual:"Qualitative",
+  fPii:"Personal data collected for it?", oNo:"No", oYes:"Yes",
+  s2h:"Indicator anatomy", s2sub:"A statement is only the surface. These seven elements decide whether the indicator can actually be reported — they feed 55 % of the score.",
+  fUnit:"Unit of measure defined?", fBase:"Baseline", oBaseNone:"None", oBasePlan:"Collection planned", oBaseKnown:"Value established",
+  fTarget:"Target with date set?", fSource:"Data source named?", fFreq:"Collection frequency set?", fResp:"Responsible party assigned?",
+  fDisagg:"Disaggregation", oDis0:"None", oDis1:"Sex only", oDis2:"Sex + age", oDis3:"Sex + age + disability (+ geo)",
+  s3h:"Quality readout", s3sub:"IQS = 55 % anatomy completeness + 45 % statement quality. The gates run the checks a donor auditor would.",
+  iqsReadout:"IQS — Indicator Quality Score", gatesReadout:"Ethics & compliance gates",
+  wAnat:"Anatomy", wStmt:"Statement",
+  iqsLow:"Not reportable yet — definition work before any data collection.",
+  iqsMid:"Workable core — complete the anatomy and fix the flagged wording.",
+  iqsHigh:"Strong indicator — ready for the IPTT and reference sheet.",
+  vRr:"Report-ready — into the IPTT with a full reference sheet.",
+  vNd:"Needs definition work — complete the PIRS before collection starts.",
+  vRd:"Redesign — as written, this cannot produce evidence a donor will accept.",
+  vSplit:" Consider splitting: the statement measures more than one thing.",
+  gDP:"Data protection", gDNH:"Do-no-harm & inclusion", gDC:"Donor compliance", gEI:"Evidence integrity",
+  vOk:"Clear", vWarn:"Conditions", vStop:"Stop & fix",
+  dpOk:"No personal data indicated.",
+  dpWarn:"Consent wording, data minimization, secure storage (check server region), and pseudonymized analysis files required.",
+  dnhOk:"Disaggregation supports inclusive reporting.",
+  dnhWarn:"Add disaggregation (minimum sex + age; disability where feasible) so results don't hide who is left out.",
+  dnhStop:"Outcome-level indicator with no disaggregation — donors will flag this as a GESI gap.",
+  dcNote:"Template and indicator conventions verified against current donor guidance? Mark [VERIFY] until confirmed — requirements move (e.g. the post-2025 US foreign-assistance restructuring).",
+  eiOk:"Baseline and target logic is coherent.",
+  eiWarnT:"Target without a baseline — progress claims will be unmeasurable. Plan the baseline first.",
+  eiStop:"Neither baseline nor target — as it stands, nothing can be evidenced.",
+  stand:"Reference status: mid-2026 (incl. post-2025 US foreign-assistance restructuring). Verify donor specifics before client use. Not legal advice.",
+  s4h:"Agent rewrite & mini-PIRS", s4sub:"Steps 01–03 are deterministic logic — they run without AI. Here the agent takes over: assessment, a donor-ready rewrite (split if double-barreled), and a compact reference sheet. It will not invent baseline or target values — it proposes how to establish them.",
+  aiBtn:"Run agent analysis", aiBtnLoad:"Analyzing …", aiLink:"Open full version in Claude", copyBtn:"Copy result & open contact",
+  aiOutTitle:"Agent analysis (demo model)",
+  aiFail:"The AI analysis does not run in this environment (no API access on static pages). The checks above are unaffected.",
+  aiFailLink:"For the full AI analysis: open the Claude version (a free Claude account is enough).",
+  needInd:"Please enter an indicator statement in step 01 first.",
+  copied:"Summary copied — contact page opening.",
+  copyFail:"Copy failed — summary shown below instead.",
+  archH:"Under the hood",
+  archSub:"This demo is the condensed layer of a MEL data-systems delivery agent (skill architecture) I built for donor-funded programme work. The full version runs the complete MEL data lifecycle in seven phases with a defined artifact per phase:",
+  p0:"0 Intake", p1:"1 Results architecture QA", p2:"2 Indicator system", p3:"3 Collection design", p4:"4 Pipeline & DQA", p5:"5 Analysis", p6:"6 Reporting & learning",
+  archNote:"Four gates run on every deliverable: data protection & consent · do-no-harm & inclusion · donor compliance · evidence integrity. Core principles: never invent data, full indicator anatomy, attribution honesty, reproducible pipelines — and AI output is a draft for human verification, by design.",
+  disclaimer:"Demo tool. Heuristic results based on your inputs; a full indicator review considers programme context. Not legal advice.",
+  fVague:"vague: ", fCompound:"double-barreled?", fNumber:"target baked into wording", fLong:"over-long", fGoodstart:"good quantitative form", fQualhint:"consider # of / % of form",
+  sumTitle:"MEL Indicator Quality Check — result", sumInd:"Indicator", sumIqs:"IQS", sumLevel:"Level", sumFlags:"Flags", sumGates:"Gates", sumVerdict:"Verdict", sumNone:"none"
+},
+de:{
+  brandTag:"MEL Data Systems", loadExample:"Beispiel laden",
+  eyebrow:"Live-Demo · Interaktives M&E-Werkzeug",
+  title:"MEL Indikator-Qualitätscheck",
+  lede:"Fügen Sie einen Indikator aus Ihrem Logframe ein. Das Werkzeug prüft die Formulierung beim Tippen, bewertet die Messbarkeit, führt vier Ethik- und Compliance-Gates aus — und auf Wunsch schreibt der Agent den Indikator geberreif um, mit Mini-Referenzblatt.",
+  s1h:"Indikator & Kontext", s1sub:"Ein Indikator pro Durchlauf — genau so, wie er im Wirkungsgefüge steht.",
+  fInd:"Indikator-Formulierung", phInd:"z. B. Anteil der ausgebildeten Jugendlichen in Beschäftigung 6 Monate nach Abschluss",
+  fLevel:"Ergebnisebene", oOutput:"Output", oOutcome:"Outcome", oImpact:"Impact",
+  fDonor:"Geber-Kontext", oUn:"UN-Organisation", oOther:"Andere / keiner",
+  fItype:"Indikator-Typ", oQuant:"Quantitativ", oQual:"Qualitativ",
+  fPii:"Werden dafür personenbezogene Daten erhoben?", oNo:"Nein", oYes:"Ja",
+  s2h:"Indikator-Anatomie", s2sub:"Die Formulierung ist nur die Oberfläche. Diese sieben Elemente entscheiden, ob der Indikator berichtbar ist — sie liefern 55 % der Bewertung.",
+  fUnit:"Maßeinheit definiert?", fBase:"Baseline", oBaseNone:"Keine", oBasePlan:"Erhebung geplant", oBaseKnown:"Wert ermittelt",
+  fTarget:"Zielwert mit Datum gesetzt?", fSource:"Datenquelle benannt?", fFreq:"Erhebungsfrequenz festgelegt?", fResp:"Verantwortliche Stelle benannt?",
+  fDisagg:"Disaggregierung", oDis0:"Keine", oDis1:"Nur Geschlecht", oDis2:"Geschlecht + Alter", oDis3:"Geschlecht + Alter + Behinderung (+ Geografie)",
+  s3h:"Qualitäts-Readout", s3sub:"IQS = 55 % Anatomie-Vollständigkeit + 45 % Formulierungsqualität. Die Gates prüfen, was ein Geber-Auditor prüfen würde.",
+  iqsReadout:"IQS — Indikator-Qualitätsscore", gatesReadout:"Ethik- & Compliance-Gates",
+  wAnat:"Anatomie", wStmt:"Formulierung",
+  iqsLow:"Noch nicht berichtbar — erst Definitionsarbeit, dann Datenerhebung.",
+  iqsMid:"Brauchbarer Kern — Anatomie vervollständigen und markierte Formulierungen korrigieren.",
+  iqsHigh:"Starker Indikator — bereit für IPTT und Referenzblatt.",
+  vRr:"Berichtsreif — ab in die IPTT, mit vollständigem Referenzblatt.",
+  vNd:"Definitionsarbeit nötig — PIRS vervollständigen, bevor die Erhebung startet.",
+  vRd:"Neu konzipieren — so formuliert entsteht keine Evidenz, die ein Geber akzeptiert.",
+  vSplit:" Aufteilen prüfen: Die Formulierung misst mehr als eine Sache.",
+  gDP:"Datenschutz", gDNH:"Do-no-harm & Inklusion", gDC:"Geber-Compliance", gEI:"Evidenz-Integrität",
+  vOk:"Unkritisch", vWarn:"Auflagen", vStop:"Stopp & korrigieren",
+  dpOk:"Keine personenbezogenen Daten angegeben.",
+  dpWarn:"Einwilligungstext, Datenminimierung, sichere Speicherung (Server-Region prüfen) und pseudonymisierte Analysedateien erforderlich.",
+  dnhOk:"Disaggregierung ermöglicht inklusive Berichterstattung.",
+  dnhWarn:"Disaggregierung ergänzen (mindestens Geschlecht + Alter; Behinderung wo machbar), damit Ergebnisse nicht verdecken, wer außen vor bleibt.",
+  dnhStop:"Outcome-Indikator ohne Disaggregierung — Geber werten das als GESI-Lücke.",
+  dcNote:"Vorlage und Indikator-Konventionen gegen aktuelle Geber-Vorgaben verifiziert? Bis dahin [VERIFIZIEREN] markieren — Anforderungen ändern sich (z. B. die US-Restrukturierung der Entwicklungszusammenarbeit seit 2025).",
+  eiOk:"Baseline- und Ziellogik sind kohärent.",
+  eiWarnT:"Zielwert ohne Baseline — Fortschritt wird nicht messbar sein. Zuerst die Baseline planen.",
+  eiStop:"Weder Baseline noch Zielwert — so lässt sich nichts belegen.",
+  stand:"Referenzstand: Mitte 2026 (inkl. US-Restrukturierung der Entwicklungszusammenarbeit seit 2025). Geber-Spezifika vor Kundeneinsatz verifizieren. Keine Rechtsberatung.",
+  s4h:"Agent-Rewrite & Mini-PIRS", s4sub:"Die Schritte 01–03 sind deterministische Logik — sie laufen ohne KI. Hier übernimmt der Agent: Einschätzung, geberreife Neuformulierung (bei Doppel-Indikatoren aufgeteilt) und ein kompaktes Referenzblatt. Baseline- oder Zielwerte erfindet er nicht — er schlägt vor, wie sie ermittelt werden.",
+  aiBtn:"Agent-Analyse starten", aiBtnLoad:"Analysiere …", aiLink:"Vollversion in Claude öffnen", copyBtn:"Ergebnis kopieren & Kontakt öffnen",
+  aiOutTitle:"Analyse des Agenten (Demo-Modell)",
+  aiFail:"Die KI-Analyse läuft in dieser Umgebung nicht (kein API-Zugang auf statischen Seiten). Die Prüfungen oben sind davon unberührt.",
+  aiFailLink:"Für die vollständige KI-Analyse: Claude-Version öffnen (kostenloses Claude-Konto genügt).",
+  needInd:"Bitte zuerst eine Indikator-Formulierung in Schritt 01 eintragen.",
+  copied:"Zusammenfassung kopiert — Kontaktseite öffnet sich.",
+  copyFail:"Kopieren nicht möglich — Zusammenfassung wird unten angezeigt.",
+  archH:"Unter der Haube",
+  archSub:"Diese Demo ist die komprimierte Ebene eines MEL-Delivery-Agenten (Skill-Architektur) für geberfinanzierte Programme. Die Vollversion durchläuft den kompletten MEL-Datenlebenszyklus in sieben Phasen mit definiertem Artefakt je Phase:",
+  p0:"0 Intake", p1:"1 Wirkungsgefüge-QA", p2:"2 Indikatorensystem", p3:"3 Erhebungsdesign", p4:"4 Pipeline & DQA", p5:"5 Analyse", p6:"6 Reporting & Lernen",
+  archNote:"Vier Gates laufen über jedes Deliverable: Datenschutz & Einwilligung · Do-no-harm & Inklusion · Geber-Compliance · Evidenz-Integrität. Grundprinzipien: keine erfundenen Daten, vollständige Indikator-Anatomie, Attributions-Ehrlichkeit, reproduzierbare Pipelines — und KI-Output ist per Design ein Entwurf zur menschlichen Prüfung.",
+  disclaimer:"Demo-Werkzeug. Heuristische Ergebnisse auf Basis Ihrer Angaben; eine vollständige Indikator-Prüfung berücksichtigt den Programmkontext. Keine Rechtsberatung.",
+  fVague:"vage: ", fCompound:"Doppel-Indikator?", fNumber:"Zielwert in der Formulierung", fLong:"zu lang", fGoodstart:"gute quantitative Form", fQualhint:"Form „Anzahl / Anteil“ erwägen",
+  sumTitle:"MEL Indikator-Qualitätscheck — Ergebnis", sumInd:"Indikator", sumIqs:"IQS", sumLevel:"Ebene", sumFlags:"Hinweise", sumGates:"Gates", sumVerdict:"Einordnung", sumNone:"keine"
+}};
+
+function t(k){ return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  var nodes = document.querySelectorAll("[data-i18n]");
+  for (var i=0;i<nodes.length;i++){ nodes[i].innerHTML = t(nodes[i].getAttribute("data-i18n")); }
+  var phs = document.querySelectorAll("[data-i18n-ph]");
+  for (var j=0;j<phs.length;j++){ phs[j].setAttribute("placeholder", t(phs[j].getAttribute("data-i18n-ph"))); }
+  document.getElementById("langEn").classList.toggle("active", LANG==="en");
+  document.getElementById("langDe").classList.toggle("active", LANG==="de");
+  document.getElementById("langEn").setAttribute("aria-pressed", LANG==="en");
+  document.getElementById("langDe").setAttribute("aria-pressed", LANG==="de");
+  render();
+}
+
+/* ================= HELPERS ================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function toast(msg){
+  var el = $("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove("show"); }, 2600);
+}
+
+/* ================= LINT ================= */
+var VAGUE = ["improved","improve","enhanced","strengthened","better","quality","awareness","capacity","effective","empowered","sensitized","adequate","appropriate","sufficient",
+             "verbessert","verbesserte","gestärkt","gestärkte","qualität","bewusstsein","kapazität","kapazitäten","wirksam","sensibilisiert","angemessen","ausreichend"];
+function lint(){
+  var s = $("ind").value.trim();
+  var out = { flags: [], score: 5, compound:false, empty: s.length===0 };
+  if (out.empty){ out.score = 0; return out; }
+  var low = " " + s.toLowerCase().replace(/[.,;:()]/g," ") + " ";
+  var hits = [];
+  for (var i=0;i<VAGUE.length;i++){
+    if (low.indexOf(" "+VAGUE[i]+" ") > -1 && hits.indexOf(VAGUE[i]) === -1) hits.push(VAGUE[i]);
+  }
+  hits = hits.slice(0,3);
+  for (var h=0;h<hits.length;h++){ out.flags.push({cls:"bad", txt:t("fVague")+hits[h]}); out.score -= 1.2; }
+  if (/\s(and|und)\s/i.test(s) ){ out.flags.push({cls:"bad", txt:t("fCompound")}); out.score -= 0.8; out.compound = true; }
+  var goodStart = /^\s*(#|%|number of|no\. of|share of|proportion of|anzahl|anteil)/i.test(s);
+  var hasNumber = /\d/.test(s.replace(/^\s*%/,""));
+  if (hasNumber && !/\b(months?|monaten?|weeks?|wochen?|days?|tagen?|years?|jahren?)\b/i.test(s)){ out.flags.push({cls:"bad", txt:t("fNumber")}); out.score -= 0.8; }
+  if (s.split(/\s+/).length > 25){ out.flags.push({cls:"bad", txt:t("fLong")}); out.score -= 0.5; }
+  if (goodStart){ out.flags.push({cls:"good", txt:t("fGoodstart")}); }
+  else if ($("itype").value === "quant"){ out.flags.push({cls:"bad", txt:t("fQualhint")}); out.score -= 0.3; }
+  out.score = Math.max(0, Math.round(out.score*10)/10);
+  return out;
+}
+
+/* ================= SCORING & GATES ================= */
+function anatomyScore(){
+  var pts = 0;
+  pts += $("unit").value==="yes" ? 1 : 0;
+  var b = $("base").value; pts += b==="known" ? 1 : (b==="planned" ? 0.6 : 0);
+  pts += $("target").value==="yes" ? 1 : 0;
+  pts += $("source").value==="yes" ? 1 : 0;
+  pts += $("freq").value==="yes" ? 1 : 0;
+  pts += $("resp").value==="yes" ? 1 : 0;
+  pts += parseFloat($("disagg").value);
+  return Math.round((pts/7*5)*10)/10;
+}
+function calcIQS(L){
+  var a = anatomyScore();
+  var iqs = 0.55*a + 0.45*L.score;
+  return { iqs: Math.round(iqs*10)/10, anatomy: a, stmt: L.score };
+}
+function calcGates(){
+  var pii = $("pii").value==="yes";
+  var dis = parseFloat($("disagg").value);
+  var level = $("level").value;
+  var base = $("base").value, target = $("target").value==="yes";
+  var g = [];
+  g.push(pii ? {name:t("gDP"), cls:"g-warn", verdict:t("vWarn"), note:t("dpWarn"), level:1}
+             : {name:t("gDP"), cls:"g-ok",   verdict:t("vOk"),   note:t("dpOk"),   level:0});
+  if (dis >= 0.7)      g.push({name:t("gDNH"), cls:"g-ok",   verdict:t("vOk"),   note:t("dnhOk"),   level:0});
+  else if (dis > 0)    g.push({name:t("gDNH"), cls:"g-warn", verdict:t("vWarn"), note:t("dnhWarn"), level:1});
+  else if (level!=="output") g.push({name:t("gDNH"), cls:"g-stop", verdict:t("vStop"), note:t("dnhStop"), level:2});
+  else                 g.push({name:t("gDNH"), cls:"g-warn", verdict:t("vWarn"), note:t("dnhWarn"), level:1});
+  g.push({name:t("gDC"), cls:"g-warn", verdict:t("vWarn"), note:t("dcNote"), level:1});
+  if ((base==="known"||base==="planned") && target)
+       g.push({name:t("gEI"), cls:"g-ok",   verdict:t("vOk"),   note:t("eiOk"),    level:0});
+  else if (target && base==="none")
+       g.push({name:t("gEI"), cls:"g-warn", verdict:t("vWarn"), note:t("eiWarnT"), level:1});
+  else if (!target && base==="none")
+       g.push({name:t("gEI"), cls:"g-stop", verdict:t("vStop"), note:t("eiStop"),  level:2});
+  else g.push({name:t("gEI"), cls:"g-warn", verdict:t("vWarn"), note:t("eiWarnT"), level:1});
+  return g;
+}
+
+/* ================= RENDER ================= */
+function render(){
+  var L = lint();
+  var fh = "";
+  for (var i=0;i<L.flags.length;i++){ fh += '<span class="flag '+L.flags[i].cls+'">'+esc(L.flags[i].txt)+'</span>'; }
+  $("flagBox").innerHTML = fh;
+
+  var S = calcIQS(L);
+  $("iqsVal").textContent = S.iqs.toFixed(1);
+  $("iqsBar").style.width = (S.iqs/5*100)+"%";
+  $("iqsNote").textContent = S.iqs>=4 ? t("iqsHigh") : (S.iqs>=2.5 ? t("iqsMid") : t("iqsLow"));
+  $("iqsBreak").innerHTML =
+    '<span class="chip">'+t("wAnat")+" "+S.anatomy.toFixed(1)+"/5 · 55%</span>"+
+    '<span class="chip">'+t("wStmt")+" "+S.stmt.toFixed(1)+"/5 · 45%</span>";
+
+  var v = $("verdictBox");
+  if (S.iqs>=4){ v.className="verdict rr"; v.textContent = t("vRr"); }
+  else if (S.iqs>=2.5){ v.className="verdict nd"; v.textContent = t("vNd"); }
+  else { v.className="verdict rd"; v.textContent = t("vRd"); }
+  if (L.compound){ v.textContent += t("vSplit"); }
+
+  var G = calcGates();
+  var gh = "";
+  for (var k=0;k<G.length;k++){
+    gh += '<div class="gate '+G[k].cls+'"><div class="g-name">'+esc(G[k].name)+'</div>'+
+          '<div class="g-verdict"><span class="light"></span>'+esc(G[k].verdict)+'</div>'+
+          '<div class="g-note">'+esc(G[k].note)+'</div></div>';
+  }
+  $("gates").innerHTML = gh;
+
+  var link = $("artifactLink");
+  if (ARTIFACT_URL.indexOf("REPLACE_WITH") !== 0){ link.href = ARTIFACT_URL; link.classList.remove("hidden"); }
+}
+
+/* ================= EXAMPLE ================= */
+function loadExample(){
+  $("ind").value = LANG==="de"
+    ? "Verbesserte Kapazitäten und Bewusstsein von 500 Jugendlichen in Beschäftigungsfähigkeit"
+    : "Improved capacity and awareness of 500 youth trained in employability skills";
+  $("level").value="outcome"; $("donor").value="eu"; $("itype").value="quant"; $("pii").value="yes";
+  $("unit").value="no"; $("base").value="none"; $("target").value="no"; $("source").value="no";
+  $("freq").value="no"; $("resp").value="no"; $("disagg").value="0";
+  render();
+  document.getElementById("s3").scrollIntoView({behavior:"smooth"});
+}
+
+/* ================= SUMMARY / COPY ================= */
+function buildSummary(){
+  var L=lint(), S=calcIQS(L), G=calcGates();
+  var gl = G.map(function(g){ return g.name+": "+g.verdict; }).join(" · ");
+  var fl = L.flags.filter(function(f){return f.cls==="bad";}).map(function(f){return f.txt;}).join(", ") || t("sumNone");
+  var verdict = S.iqs>=4 ? t("vRr") : (S.iqs>=2.5 ? t("vNd") : t("vRd"));
+  return t("sumTitle")+"\n"+
+    t("sumInd")+": "+($("ind").value.trim()||"—")+"\n"+
+    t("sumLevel")+": "+$("level").options[$("level").selectedIndex].text+" · "+t("sumIqs")+": "+S.iqs.toFixed(1)+"/5\n"+
+    t("sumFlags")+": "+fl+"\n"+
+    t("sumGates")+": "+gl+"\n"+
+    t("sumVerdict")+": "+verdict+"\n"+
+    "[M&E]";
+}
+function copyAndContact(){
+  var txt = buildSummary();
+  function done(){ toast(t("copied")); window.open(PORTFOLIO_CONTACT,"_blank","noopener"); }
+  function fallbackShow(s){
+    toast(t("copyFail"));
+    $("aiCard").classList.remove("hidden");
+    $("aiOut").innerHTML = "<pre style='white-space:pre-wrap;font-family:var(--mono);font-size:13px'>"+esc(s)+"</pre>";
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallbackShow(txt); });
+  } else { fallbackShow(txt); }
+}
+
+/* ================= AI LAYER ================= */
+var DEMO_BRAIN =
+"You are the demo layer of an expert MEL/MEAL data-systems delivery agent for donor-funded programmes (EU, GIZ, UN, FCDO, SDC, KfW, World Bank). " +
+"You receive one indicator with its result level, donor context, anatomy status, lint flags, and gate results. " +
+"Rules: NEVER invent baseline or target values - propose HOW to establish them (source, method, timing); respect disaggregation minimums (sex, age, disability where feasible); " +
+"use precise donor register, no consultant filler; if the statement is double-barreled, split it into separate indicators; keep attribution honest. " +
+"Output EXACTLY four numbered sections in the response language: " +
+"1) Assessment / Einschaetzung (2-3 sentences on what breaks and why), " +
+"2) Rewritten indicator / Neuformulierung (donor-ready; split if needed), " +
+"3) Mini-PIRS (compact lines: definition incl. numerator-denominator, unit, disaggregation, data source, frequency, baseline approach, limitations), " +
+"4) Next 3 steps / Naechste 3 Schritte (concrete, with owner and rough timing). " +
+"Plain text with the numbered headers, no markdown symbols, maximum ~300 words.";
+
+function aiCleanup(){ var btn=$("aiBtn"); btn.disabled=false; btn.textContent=t("aiBtn"); }
+function renderAI(txt){
+  var safe = esc(txt);
+  safe = safe.replace(/^(\s*\d\)[^\n]*)$/gm, '<div class="sec-h">$1</div>');
+  safe = safe.split(/\n{2,}/).map(function(p){ return p.indexOf('sec-h')>-1 ? p : "<p>"+p.replace(/\n/g,"<br>")+"</p>"; }).join("");
+  $("aiOut").innerHTML = safe;
+}
+function runAI(){
+  if (!$("ind").value.trim()){ toast(t("needInd")); $("ind").focus(); return; }
+  var btn=$("aiBtn"); btn.disabled=true; btn.textContent=t("aiBtnLoad");
+  $("aiCard").classList.remove("hidden");
+  $("aiOut").innerHTML = '<span class="spinner"></span>'+esc(t("aiBtnLoad"));
+
+  var L=lint(), S=calcIQS(L), G=calcGates();
+  var payload = {
+    language: LANG,
+    indicator: $("ind").value.trim(),
+    resultLevel: $("level").value,
+    donorContext: $("donor").value,
+    indicatorType: $("itype").value,
+    piiCollected: $("pii").value,
+    anatomy: {
+      unitDefined: $("unit").value, baseline: $("base").value, targetSet: $("target").value,
+      sourceNamed: $("source").value, frequencySet: $("freq").value, responsibleAssigned: $("resp").value,
+      disaggregationLevel: $("disagg").options[$("disagg").selectedIndex].text
+    },
+    iqs: { total: S.iqs, anatomy: S.anatomy, statement: S.stmt },
+    lintFlags: L.flags.filter(function(f){return f.cls==="bad";}).map(function(f){return f.txt;}),
+    doubleBarreled: L.compound,
+    gates: G.map(function(g){ return {gate:g.name, verdict:g.verdict, note:g.note}; })
+  };
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1000,
+      system: DEMO_BRAIN,
+      messages:[{ role:"user", content:"Indicator assessment as JSON:\n"+JSON.stringify(payload,null,1)+"\nRespond in language: "+(LANG==="de"?"German (Sie-Form)":"English")+"." }]
+    })
+  }).then(function(r){
+    if(!r.ok){ throw new Error("HTTP "+r.status); }
+    return r.json();
+  }).then(function(data){
+    var txt = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
+    if(!txt){ throw new Error("empty"); }
+    renderAI(txt);
+    aiCleanup();
+  }).catch(function(){
+    var msg = "<p>"+esc(t("aiFail"))+"</p>";
+    if (ARTIFACT_URL.indexOf("REPLACE_WITH") !== 0){
+      msg += "<p><a class='btn' href='"+ARTIFACT_URL+"' target='_blank' rel='noopener'>"+esc(t("aiLink"))+"</a></p>";
+      $("artifactLink").classList.remove("hidden");
+    } else {
+      msg += "<p class='note'>"+esc(t("aiFailLink"))+"</p>";
+    }
+    $("aiOut").innerHTML = msg;
+    aiCleanup();
+  });
+}
+
+/* ================= WIRE-UP ================= */
+(function init(){
+  var inputs = document.querySelectorAll("input, select, textarea");
+  for (var i=0;i<inputs.length;i++){ inputs[i].addEventListener("input", render); }
+  $("exampleBtn").addEventListener("click", loadExample);
+  $("langEn").addEventListener("click", function(){ LANG="en"; applyLang(); });
+  $("langDe").addEventListener("click", function(){ LANG="de"; applyLang(); });
+  $("copyBtn").addEventListener("click", copyAndContact);
+  $("aiBtn").addEventListener("click", function(){ try { runAI(); } catch(e){ aiCleanup(); } });
+  applyLang();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KI-Potenzial-Check Mittelstand · Walid SayedAhmed</title>
+<meta name="description" content="Interaktiver KI-Potenzial-Check für den Mittelstand: Automatisierungspotenzial, Compliance-Gates (KI-VO, DSGVO, BetrVG) und ROI in drei Szenarien.">
+<style>
+  :root{
+    --bg:#f7f8fa; --surface:#ffffff; --ink:#1f2430; --ink-soft:#5a6272;
+    --line:#e3e6ec; --accent:#4f5bd5; --accent-soft:#eef0fc; --accent-ink:#3a44a8;
+    --ok:#2e7d5b; --warn:#a86a00; --stop:#b3382c;
+    --ok-bg:#e8f4ee; --warn-bg:#fdf3e0; --stop-bg:#faeae8;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --radius:10px; --maxw:880px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  header.top{position:sticky;top:0;background:rgba(247,248,250,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+  .brand{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  .brand a{color:var(--ink)}
+  .topbtns{display:flex;gap:8px;align-items:center}
+  button{font-family:var(--sans);cursor:pointer}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:14px;transition:border-color .15s, background .15s}
+  .btn:hover{border-color:var(--accent)}
+  .btn:focus-visible,.seg button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-ink)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:var(--surface);padding:7px 12px;font-size:13px;font-family:var(--mono);color:var(--ink-soft)}
+  .seg button.active{background:var(--accent);color:#fff}
+
+  .hero{padding:56px 0 28px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:14px}
+  h1{font-size:clamp(28px,4.5vw,40px);line-height:1.15;letter-spacing:-.01em;font-weight:700;max-width:640px}
+  .lede{color:var(--ink-soft);max-width:600px;margin-top:14px;font-size:17px}
+
+  section.step{padding:34px 0;border-top:1px solid var(--line)}
+  .stephead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .stepnum{font-family:var(--mono);font-size:14px;color:var(--accent-ink)}
+  h2{font-size:21px;font-weight:650;letter-spacing:-.005em}
+  .stepsub{color:var(--ink-soft);font-size:14.5px;max-width:640px;margin-bottom:20px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+  .field .hint{font-weight:400;color:var(--ink-soft)}
+  input,select{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:9px 11px;font-size:15px;font-family:var(--sans);color:var(--ink)}
+  input[type=number]{font-family:var(--mono)}
+  .assume{font-family:var(--mono);font-size:11px;color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:18px}
+  .readout-title{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+  .apsrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .apsval{font-family:var(--mono);font-size:38px;font-weight:600}
+  .apsval small{font-size:16px;color:var(--ink-soft);font-weight:400}
+  .apsbar{flex:1;min-width:180px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+  .apsbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+  .apsnote{font-size:14px;color:var(--ink-soft);width:100%}
+  .apsbreak{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink-soft)}
+
+  .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .gate{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px}
+  .gate .g-name{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:8px}
+  .light{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+  .g-ok .light{background:var(--ok)} .g-warn .light{background:var(--warn)} .g-stop .light{background:var(--stop)}
+  .g-verdict{font-weight:650;font-size:14.5px}
+  .g-ok .g-verdict{color:var(--ok)} .g-warn .g-verdict{color:var(--warn)} .g-stop .g-verdict{color:var(--stop)}
+  .g-note{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.45}
+  .stand{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:12px}
+
+  .formula{font-family:var(--mono);font-size:13.5px;background:var(--accent-soft);border:1px solid #dfe3fb;border-radius:8px;padding:14px;overflow-x:auto;white-space:pre;line-height:1.7;margin:14px 0}
+  .scen{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:6px}
+  .scenbox{border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--surface)}
+  .scenbox .s-l{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .scenbox .s-v{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:4px}
+  .scenbox.base{border-color:var(--accent)}
+  .kv{display:flex;justify-content:space-between;gap:10px;font-size:14.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .kv:last-child{border-bottom:0}
+  .kv b{font-family:var(--mono);font-weight:600;white-space:nowrap}
+  .quad{margin-top:16px;padding:14px 16px;border-radius:var(--radius);font-weight:650;border:1px solid var(--line)}
+  .quad.qw{background:var(--ok-bg);color:var(--ok);border-color:#cde6da}
+  .quad.sw{background:var(--accent-soft);color:var(--accent-ink);border-color:#dfe3fb}
+  .quad.sp{background:#f1f2f5;color:var(--ink-soft)}
+  .quad.fw{background:var(--stop-bg);color:var(--stop);border-color:#f0d2ce}
+  .quad.cp{background:var(--warn-bg);color:var(--warn);border-color:#f2e2c0}
+
+  .ai-out{margin-top:16px;font-size:15px}
+  .ai-out p{margin-bottom:12px}
+  .ai-out .sec-h{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin:16px 0 6px}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{font-size:13.5px;color:var(--ink-soft)}
+
+  .arch{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .arch .ph{font-family:var(--mono);font-size:12px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 10px}
+  .arch .arrow{color:var(--ink-soft);align-self:center;font-family:var(--mono)}
+
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 48px;font-size:13px;color:var(--ink-soft)}
+  footer .fx{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:14px;padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap topbar">
+  <div class="brand"><a href="https://walidmohmed-ops.github.io/" target="_blank" rel="noopener">Walid SayedAhmed</a> · <span data-i18n="brandTag">Specialist Digitalisierung &amp; KI</span></div>
+  <div class="topbtns">
+    <button class="btn" id="exampleBtn" data-i18n="loadExample">Beispiel laden</button>
+    <div class="seg" role="group" aria-label="Sprache / Language">
+      <button id="langDe" class="active" aria-pressed="true">DE</button>
+      <button id="langEn" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+<div class="hero">
+  <div class="eyebrow" data-i18n="eyebrow">Live-Demo · Interaktives Beratungswerkzeug</div>
+  <h1 data-i18n="title">KI-Potenzial-Check für den Mittelstand</h1>
+  <p class="lede" data-i18n="lede">Beschreiben Sie einen Prozess in Ihrem Unternehmen. Das Werkzeug berechnet das Automatisierungspotenzial, prüft vier Compliance-Gates und rechnet die Wirtschaftlichkeit in drei Szenarien — mit offener Formel, nicht mit Marketing-Prozenten.</p>
+</div>
+
+<!-- 01 Prozess & Zahlen -->
+<section class="step" id="s1">
+  <div class="stephead"><span class="stepnum">01</span><h2 data-i18n="s1h">Prozess &amp; Zahlen</h2></div>
+  <p class="stepsub" data-i18n="s1sub">Ein konkreter Prozess, keine Abteilung. Je genauer die Zahlen, desto belastbarer das Ergebnis.</p>
+  <div class="grid">
+    <div class="field"><label for="branche" data-i18n="fBranche">Branche</label>
+      <select id="branche">
+        <option value="handwerk" data-i18n="oHandwerk">Handwerk</option>
+        <option value="produktion" data-i18n="oProduktion">Produktion / Fertigung</option>
+        <option value="handel" data-i18n="oHandel">Handel</option>
+        <option value="dienstleistung" selected data-i18n="oDienst">Dienstleistung / Büro</option>
+        <option value="logistik" data-i18n="oLogistik">Logistik</option>
+        <option value="andere" data-i18n="oAndere">Andere</option>
+      </select></div>
+    <div class="field"><label for="ma" data-i18n="fMa">Mitarbeiterzahl</label><input type="number" id="ma" min="1" max="5000" value="25"></div>
+    <div class="field"><label for="land" data-i18n="fLand">Bundesland <span class="hint" data-i18n="fLandHint">(für Förderhinweise)</span></label>
+      <select id="land">
+        <option value="BW" selected>Baden-Württemberg</option><option value="BY">Bayern</option><option value="BE">Berlin</option><option value="BB">Brandenburg</option><option value="HB">Bremen</option><option value="HH">Hamburg</option><option value="HE">Hessen</option><option value="MV">Mecklenburg-Vorpommern</option><option value="NI">Niedersachsen</option><option value="NW">Nordrhein-Westfalen</option><option value="RP">Rheinland-Pfalz</option><option value="SL">Saarland</option><option value="SN">Sachsen</option><option value="ST">Sachsen-Anhalt</option><option value="SH">Schleswig-Holstein</option><option value="TH">Thüringen</option><option value="XX" data-i18n="oOutside">Außerhalb Deutschlands</option>
+      </select></div>
+    <div class="field"><label for="prozess" data-i18n="fProzess">Prozess</label><input type="text" id="prozess" data-i18n-ph="phProzess" placeholder="z. B. Angebotserstellung"></div>
+    <div class="field"><label for="vol" data-i18n="fVol">Vorgänge pro Monat</label><input type="number" id="vol" min="1" value="50"></div>
+    <div class="field"><label for="mins" data-i18n="fMins">Minuten pro Vorgang</label><input type="number" id="mins" min="1" value="30"></div>
+    <div class="field"><label for="rate" data-i18n="fRate">Stundensatz intern (€) <span class="assume" data-i18n="assume">Annahme</span></label><input type="number" id="rate" min="1" value="45"></div>
+    <div class="field"><label for="errq" data-i18n="fErrq">Fehlerquote % <span class="hint" data-i18n="opt">(optional)</span></label><input type="number" id="errq" min="0" max="100" value="0"></div>
+    <div class="field"><label for="errc" data-i18n="fErrc">Kosten je Fehler (€) <span class="hint" data-i18n="opt">(optional)</span></label><input type="number" id="errc" min="0" value="0"></div>
+  </div>
+</section>
+
+<!-- 02 APS -->
+<section class="step" id="s2">
+  <div class="stephead"><span class="stepnum">02</span><h2 data-i18n="s2h">Prozess-Charakteristik → Automatisierungspotenzial</h2></div>
+  <p class="stepsub" data-i18n="s2sub">Fünf Merkmale ergeben den APS (Automatisierungspotenzial-Score, 0–5). Kein Bauchgefühl — eine gewichtete Bewertung.</p>
+  <div class="grid">
+    <div class="field"><label for="rule" data-i18n="fRule">Regelbasiertheit</label>
+      <select id="rule"><option value="1" data-i18n="oRule1">Überwiegend Ermessen</option><option value="3" selected data-i18n="oRule3">Gemischt</option><option value="5" data-i18n="oRule5">Klar regelbasiert</option></select></div>
+    <div class="field"><label for="dig" data-i18n="fDig">Eingangsdaten</label>
+      <select id="dig"><option value="0" data-i18n="oDig0">Papier / analog</option><option value="2.5" selected data-i18n="oDig2">Teils digital</option><option value="5" data-i18n="oDig5">Digital</option></select></div>
+    <div class="field"><label for="fmt" data-i18n="fFmt">Formatstabilität</label>
+      <select id="fmt"><option value="1" data-i18n="oFmt1">Ständig wechselnd</option><option value="3" selected data-i18n="oFmt3">Meist stabil</option><option value="5" data-i18n="oFmt5">Stabil</option></select></div>
+    <div class="field"><label for="data" data-i18n="fData">Datenlage</label>
+      <select id="data"><option value="1" data-i18n="oData1">Verstreut / lückenhaft</option><option value="3" selected data-i18n="oData3">Teilweise zentral</option><option value="5" data-i18n="oData5">Sauber &amp; zentral</option></select></div>
+    <div class="field"><label for="api" data-i18n="fApi">Systemzugang</label>
+      <select id="api"><option value="1" data-i18n="oApi1">Kein Zugang / Alt-System</option><option value="3" selected data-i18n="oApi3">Unklar</option><option value="5" data-i18n="oApi5">API / Export vorhanden</option></select></div>
+  </div>
+  <div class="card">
+    <div class="readout-title" data-i18n="apsReadout">APS-Readout</div>
+    <div class="apsrow">
+      <div class="apsval"><span id="apsVal">3.0</span><small> / 5</small></div>
+      <div class="apsbar"><i id="apsBar"></i></div>
+      <div class="apsnote" id="apsNote"></div>
+    </div>
+    <div class="apsbreak" id="apsBreak"></div>
+  </div>
+</section>
+
+<!-- 03 Gates -->
+<section class="step" id="s3">
+  <div class="stephead"><span class="stepnum">03</span><h2 data-i18n="s3h">Compliance-Gates</h2></div>
+  <p class="stepsub" data-i18n="s3sub">Vier Prüfungen, die in Deutschland über jedes KI-Vorhaben laufen müssen — bevor ein Tool ausgewählt wird, nicht danach.</p>
+  <div class="grid" style="margin-bottom:18px">
+    <div class="field"><label for="pd" data-i18n="fPd">Personenbezogene Daten im Prozess?</label>
+      <select id="pd"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+    <div class="field"><label for="bot" data-i18n="fBot">Kundengerichteter Chatbot / KI-Inhalt geplant?</label>
+      <select id="bot"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+    <div class="field"><label for="hr" data-i18n="fHr">Einfluss auf Personalentscheidungen (Bewerbung, Beförderung)?</label>
+      <select id="hr"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+    <div class="field"><label for="mon" data-i18n="fMon">Kann das System Leistung/Verhalten von Mitarbeitern auswerten?</label>
+      <select id="mon"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+    <div class="field"><label for="br" data-i18n="fBr">Betriebsrat vorhanden?</label>
+      <select id="br"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+    <div class="field"><label for="gs" data-i18n="fGs">Geschäftsgeheimnisse / vertrauliche Daten beteiligt?</label>
+      <select id="gs"><option value="nein" data-i18n="oNo">Nein</option><option value="ja" data-i18n="oYes">Ja</option></select></div>
+  </div>
+  <div class="gates" id="gates"></div>
+  <div class="stand" data-i18n="stand">Regulierungs-Stand: Mitte 2026 (KI-VO inkl. Digital-Omnibus-Einigung Mai 2026). Vor Kundeneinsatz verifizieren. Keine Rechtsberatung.</div>
+</section>
+
+<!-- 04 ROI -->
+<section class="step" id="s4">
+  <div class="stephead"><span class="stepnum">04</span><h2 data-i18n="s4h">Wirtschaftlichkeit — offene Rechnung</h2></div>
+  <p class="stepsub" data-i18n="s4sub">Alle Annahmen sind sichtbar und anpassbar. Wenn selbst das Worst-Case-Szenario positiv bleibt, ist die Entscheidung einfach.</p>
+  <div class="grid">
+    <div class="field"><label for="grad" data-i18n="fGrad">Automatisierungsgrad % <span class="assume" data-i18n="assumeAps">Annahme aus APS</span></label><input type="number" id="grad" min="0" max="100" value="45"></div>
+    <div class="field"><label for="setup" data-i18n="fSetup">Setup einmalig (€) <span class="assume" data-i18n="assume">Annahme</span></label><input type="number" id="setup" min="0" value="4000"></div>
+    <div class="field"><label for="lic" data-i18n="fLic">Lizenzen €/Jahr <span class="assume" data-i18n="assume">Annahme</span></label><input type="number" id="lic" min="0" value="1200"></div>
+    <div class="field"><label for="care" data-i18n="fCare">Betreuung h/Monat <span class="assume" data-i18n="assume">Annahme</span></label><input type="number" id="care" min="0" value="2"></div>
+    <div class="field"><label for="train" data-i18n="fTrain">Schulung einmalig (€) <span class="assume" data-i18n="assume">Annahme</span></label><input type="number" id="train" min="0" value="500"></div>
+  </div>
+  <div class="card">
+    <div class="readout-title" data-i18n="roiReadout">ROI-Readout — Formel mit Ihren Zahlen</div>
+    <div class="formula" id="formulaBox"></div>
+    <div class="scen" id="scenBox"></div>
+    <div id="kvBox" style="margin-top:14px"></div>
+    <div class="quad" id="quadBox"></div>
+  </div>
+  <div class="card">
+    <div class="readout-title" data-i18n="fundReadout">Förder-Hinweis</div>
+    <div class="note" id="fundBox"></div>
+  </div>
+</section>
+
+<!-- 05 KI-Analyse -->
+<section class="step" id="s5">
+  <div class="stephead"><span class="stepnum">05</span><h2 data-i18n="s5h">KI-Analyse &amp; nächste Schritte</h2></div>
+  <p class="stepsub" data-i18n="s5sub">Die Schritte 01–04 sind deterministische Logik — sie laufen ohne KI. Hier übernimmt der Agent: qualitative Einordnung, einfachere Alternativen, konkrete nächste Schritte.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn primary" id="aiBtn" data-i18n="aiBtn">KI-Analyse starten</button>
+    <a class="btn hidden" id="artifactLink" target="_blank" rel="noopener" data-i18n="aiLink">Vollversion in Claude öffnen</a>
+    <button class="btn" id="copyBtn" data-i18n="copyBtn">Ergebnis kopieren &amp; Kontakt öffnen</button>
+  </div>
+  <div class="card hidden" id="aiCard"><div class="readout-title" data-i18n="aiOutTitle">Analyse des Agenten (Demo-Modell)</div><div class="ai-out" id="aiOut"></div></div>
+</section>
+
+<!-- Unter der Haube -->
+<section class="step">
+  <div class="stephead"><span class="stepnum">·</span><h2 data-i18n="archH">Unter der Haube</h2></div>
+  <p class="stepsub" data-i18n="archSub">Diese Demo ist die komprimierte Fassung eines Delivery-Agenten (Skill-Architektur), den ich für Digitalisierungs- und KI-Beratung im Mittelstand entwickelt habe. Die Vollversion arbeitet in sechs Phasen mit definierten Artefakten je Phase:</p>
+  <div class="arch">
+    <span class="ph" data-i18n="p0">0 Intake</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p1">1 Prozess-Diagnose</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p2">2 Use-Case-Portfolio</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p3">3 Tool-Evaluation</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p4">4 Business Case &amp; Roadmap</span><span class="arrow">→</span>
+    <span class="ph" data-i18n="p5">5 Adoption &amp; Governance</span>
+  </div>
+  <p class="note" data-i18n="archNote">Vier Compliance-Gates (KI-VO · DSGVO · BetrVG § 87 · Geheimnisschutz) laufen über jeden Use Case. Grundprinzipien des Agenten: Diagnose vor Tool-Auswahl, sichtbare Rechenwege, gekennzeichnete Annahmen — und „keine KI nötig“ ist eine gültige Antwort.</p>
+</section>
+
+</main>
+
+<footer><div class="wrap fx">
+  <div data-i18n="disclaimer">Demo-Werkzeug. Ergebnisse sind Richtwerte auf Basis Ihrer Angaben und markierter Annahmen. Keine Rechts- oder Steuerberatung.</div>
+  <div>© 2026 <a href="https://walidmohmed-ops.github.io/" target="_blank" rel="noopener">Walid SayedAhmed</a></div>
+</div></footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+var ARTIFACT_URL = "https://claude.ai/public/artifacts/561fd2ff-b5e7-4873-a050-979b67814fba";
+var PORTFOLIO_CONTACT = "https://walidmohmed-ops.github.io/#contact";
+
+/* ================= I18N ================= */
+var LANG = (navigator.language || "de").toLowerCase().indexOf("de") === 0 ? "de" : "en";
+var T = {
+de:{
+  brandTag:"Specialist Digitalisierung & KI", loadExample:"Beispiel laden",
+  eyebrow:"Live-Demo · Interaktives Beratungswerkzeug",
+  title:"KI-Potenzial-Check für den Mittelstand",
+  lede:"Beschreiben Sie einen Prozess in Ihrem Unternehmen. Das Werkzeug berechnet das Automatisierungspotenzial, prüft vier Compliance-Gates und rechnet die Wirtschaftlichkeit in drei Szenarien — mit offener Formel, nicht mit Marketing-Prozenten.",
+  s1h:"Prozess & Zahlen", s1sub:"Ein konkreter Prozess, keine Abteilung. Je genauer die Zahlen, desto belastbarer das Ergebnis.",
+  fBranche:"Branche", oHandwerk:"Handwerk", oProduktion:"Produktion / Fertigung", oHandel:"Handel", oDienst:"Dienstleistung / Büro", oLogistik:"Logistik", oAndere:"Andere",
+  fMa:"Mitarbeiterzahl", fLand:"Bundesland", fLandHint:"(für Förderhinweise)", oOutside:"Außerhalb Deutschlands",
+  fProzess:"Prozess", phProzess:"z. B. Angebotserstellung", fVol:"Vorgänge pro Monat", fMins:"Minuten pro Vorgang",
+  fRate:"Stundensatz intern (€)", fErrq:"Fehlerquote %", fErrc:"Kosten je Fehler (€)", opt:"(optional)", assume:"Annahme", assumeAps:"Annahme aus APS",
+  s2h:"Prozess-Charakteristik → Automatisierungspotenzial", s2sub:"Fünf Merkmale ergeben den APS (Automatisierungspotenzial-Score, 0–5). Kein Bauchgefühl — eine gewichtete Bewertung.",
+  fRule:"Regelbasiertheit", oRule1:"Überwiegend Ermessen", oRule3:"Gemischt", oRule5:"Klar regelbasiert",
+  fDig:"Eingangsdaten", oDig0:"Papier / analog", oDig2:"Teils digital", oDig5:"Digital",
+  fFmt:"Formatstabilität", oFmt1:"Ständig wechselnd", oFmt3:"Meist stabil", oFmt5:"Stabil",
+  fData:"Datenlage", oData1:"Verstreut / lückenhaft", oData3:"Teilweise zentral", oData5:"Sauber & zentral",
+  fApi:"Systemzugang", oApi1:"Kein Zugang / Alt-System", oApi3:"Unklar", oApi5:"API / Export vorhanden",
+  apsReadout:"APS-Readout",
+  apsLow:"Niedriges Potenzial — erst Prozess und Datenbasis verbessern, dann über Automatisierung sprechen.",
+  apsMid:"Mittleres Potenzial — Teilautomatisierung mit Mensch-im-Loop ist der realistische Einstieg.",
+  apsHigh:"Hohes Potenzial — Kandidat für einen 90-Tage-Pilot mit klarer Baseline-Messung.",
+  wRule:"Regeln", wDig:"Eingang", wFmt:"Format", wData:"Daten", wApi:"Zugang",
+  s3h:"Compliance-Gates", s3sub:"Vier Prüfungen, die in Deutschland über jedes KI-Vorhaben laufen müssen — bevor ein Tool ausgewählt wird, nicht danach.",
+  fPd:"Personenbezogene Daten im Prozess?", fBot:"Kundengerichteter Chatbot / KI-Inhalt geplant?", fHr:"Einfluss auf Personalentscheidungen (Bewerbung, Beförderung)?",
+  fMon:"Kann das System Leistung/Verhalten von Mitarbeitern auswerten?", fBr:"Betriebsrat vorhanden?", fGs:"Geschäftsgeheimnisse / vertrauliche Daten beteiligt?",
+  oNo:"Nein", oYes:"Ja",
+  gAI:"KI-VO (EU AI Act)", gDS:"DSGVO", gBR:"BetrVG § 87", gGS:"Geheimnisschutz",
+  vOk:"Unkritisch", vWarn:"Auflagen", vStop:"Stopp-Prüfung",
+  aiOk:"Interner Einsatz, minimales Risiko nach KI-VO.",
+  aiBot:"Transparenzpflicht: Kunden müssen ab 02.08.2026 erkennen können, dass KI antwortet (Art. 50 KI-VO).",
+  aiHr:"Hochrisiko-Einstufung (Anhang III, Beschäftigung). Pflichten greifen nach Omnibus-Einigung ab Dez. 2027 — Aufschub ist keine Befreiung. Empfehlung: KI assistiert, Mensch entscheidet nachweisbar. Kein Quick Win.",
+  dsOk:"Keine personenbezogenen Daten angegeben.",
+  dsWarn:"AV-Vertrag mit dem Anbieter, EU-Hosting bevorzugen, DSFA-Prüfung, keine Kundendaten in Consumer-KI-Konten.",
+  brOk:"Keine Überwachungsfunktion bzw. kein Betriebsrat — Hinweis dokumentieren.",
+  brWarn:"Mitbestimmungspflichtig: Betriebsrat VOR dem Pilot einbinden, nicht danach. Betriebsvereinbarung vorbereiten.",
+  gsOk:"Keine vertraulichen Daten angegeben.",
+  gsWarn:"Tool-Einstellungen prüfen (Training/Retention), Ausgabekontrolle vor Versand festlegen.",
+  stand:"Regulierungs-Stand: Mitte 2026 (KI-VO inkl. Digital-Omnibus-Einigung Mai 2026). Vor Kundeneinsatz verifizieren. Keine Rechtsberatung.",
+  s4h:"Wirtschaftlichkeit — offene Rechnung", s4sub:"Alle Annahmen sind sichtbar und anpassbar. Wenn selbst das Worst-Case-Szenario positiv bleibt, ist die Entscheidung einfach.",
+  fGrad:"Automatisierungsgrad %", fSetup:"Setup einmalig (€)", fLic:"Lizenzen €/Jahr", fCare:"Betreuung h/Monat", fTrain:"Schulung einmalig (€)",
+  roiReadout:"ROI-Readout — Formel mit Ihren Zahlen",
+  scWorst:"Worst −30 %", scBase:"Basis", scBest:"Best +30 %",
+  kvCost1:"Kosten Jahr 1 (Setup + Lizenz + Betreuung + Schulung)", kvRun:"Laufende Kosten / Jahr", kvNet:"Netto-Nutzen Jahr 1 (Basis)", kvPay:"Payback",
+  months:"Monate", never:"— (kein Payback bei diesen Annahmen)",
+  qQw:"Quick Win — Pilot in 90 Tagen mit Baseline-Messung starten.",
+  qSw:"Strategische Wette — Wert hoch, Machbarkeit noch nicht. Erst Datenbasis/Systemzugang klären.",
+  qSp:"Später — machbar, aber der Nutzen rechtfertigt aktuell keinen Projektaufwand.",
+  qFw:"Finger weg — weder Nutzen noch Machbarkeit sprechen dafür. Einfachere Lösung suchen.",
+  qCp:"Erst Compliance, dann Pilot — die Hochrisiko-Einstufung macht daraus ein Governance-Projekt, keinen Quick Win.",
+  fundReadout:"Förder-Hinweis",
+  fundDE:"Stand Mitte 2026: „Digital Jetzt“ (Ende 2023) und „go-digital“ (Ende 2024) sind ausgelaufen. Aktive Kanäle: Mittelstand-Digital Zentren (kostenlose Beratung), BAFA-Beratungsförderung (bis 31.12.2026), Forschungszulage, ZIM, KfW-Digitalisierungskredit, Landesprogramme.",
+  fundBW:" Für Baden-Württemberg: aktuelle L-Bank-/Landesangebote prüfen.",
+  fundRule:" Goldene Regel: Antrag VOR Projektstart — ein unterschriebener Vertrag vor Bewilligung kostet die Förderfähigkeit. Programmstatus vor Beratung verifizieren.",
+  fundXX:"Förderhinweise gelten für Deutschland. Für andere Länder: lokale Digitalisierungsprogramme prüfen.",
+  s5h:"KI-Analyse & nächste Schritte", s5sub:"Die Schritte 01–04 sind deterministische Logik — sie laufen ohne KI. Hier übernimmt der Agent: qualitative Einordnung, einfachere Alternativen, konkrete nächste Schritte.",
+  aiBtn:"KI-Analyse starten", aiBtnLoad:"Analysiere …", aiLink:"Vollversion in Claude öffnen", copyBtn:"Ergebnis kopieren & Kontakt öffnen",
+  aiOutTitle:"Analyse des Agenten (Demo-Modell)",
+  aiFail:"Die KI-Analyse läuft in dieser Umgebung nicht (kein API-Zugang auf statischen Seiten). Die Berechnungen oben sind davon unberührt.",
+  aiFailLink:"Für die vollständige KI-Analyse: Vollversion in Claude öffnen (kostenloses Claude-Konto genügt).",
+  needProcess:"Bitte zuerst einen Prozessnamen in Schritt 01 eintragen.",
+  copied:"Zusammenfassung kopiert — Kontaktseite öffnet sich.",
+  copyFail:"Kopieren nicht möglich — Zusammenfassung wird unten angezeigt.",
+  archH:"Unter der Haube",
+  archSub:"Diese Demo ist die komprimierte Fassung eines Delivery-Agenten (Skill-Architektur), den ich für Digitalisierungs- und KI-Beratung im Mittelstand entwickelt habe. Die Vollversion arbeitet in sechs Phasen mit definierten Artefakten je Phase:",
+  p0:"0 Intake", p1:"1 Prozess-Diagnose", p2:"2 Use-Case-Portfolio", p3:"3 Tool-Evaluation", p4:"4 Business Case & Roadmap", p5:"5 Adoption & Governance",
+  archNote:"Vier Compliance-Gates (KI-VO · DSGVO · BetrVG § 87 · Geheimnisschutz) laufen über jeden Use Case. Grundprinzipien des Agenten: Diagnose vor Tool-Auswahl, sichtbare Rechenwege, gekennzeichnete Annahmen — und „keine KI nötig“ ist eine gültige Antwort.",
+  disclaimer:"Demo-Werkzeug. Ergebnisse sind Richtwerte auf Basis Ihrer Angaben und markierter Annahmen. Keine Rechts- oder Steuerberatung.",
+  sumTitle:"KI-Potenzial-Check — Ergebnis", sumProc:"Prozess", sumAps:"APS", sumGrad:"Automatisierungsgrad (Annahme)", sumBen:"Jahresnutzen (Basis)", sumPay:"Payback", sumGates:"Gates", sumVerdict:"Einordnung"
+},
+en:{
+  brandTag:"Specialist Digitalisierung & KI", loadExample:"Load example",
+  eyebrow:"Live demo · Interactive consulting tool",
+  title:"AI Potential Check for SMEs",
+  lede:"Describe one process in your company. The tool scores its automation potential, runs four German compliance gates and computes the business case in three scenarios — with the formula in the open, not marketing percentages.",
+  s1h:"Process & numbers", s1sub:"One concrete process, not a department. The better the numbers, the more robust the result.",
+  fBranche:"Industry", oHandwerk:"Skilled trades", oProduktion:"Manufacturing", oHandel:"Retail / trade", oDienst:"Services / office", oLogistik:"Logistics", oAndere:"Other",
+  fMa:"Employees", fLand:"Federal state", fLandHint:"(for funding hints)", oOutside:"Outside Germany",
+  fProzess:"Process", phProzess:"e.g. quote creation", fVol:"Cases per month", fMins:"Minutes per case",
+  fRate:"Internal hourly rate (€)", fErrq:"Error rate %", fErrc:"Cost per error (€)", opt:"(optional)", assume:"Assumption", assumeAps:"Assumption from APS",
+  s2h:"Process profile → automation potential", s2sub:"Five characteristics produce the APS (automation potential score, 0–5). Not gut feeling — a weighted assessment.",
+  fRule:"Rule-based nature", oRule1:"Mostly judgment", oRule3:"Mixed", oRule5:"Clearly rule-based",
+  fDig:"Input data", oDig0:"Paper / analog", oDig2:"Partly digital", oDig5:"Digital",
+  fFmt:"Format stability", oFmt1:"Constantly changing", oFmt3:"Mostly stable", oFmt5:"Stable",
+  fData:"Data situation", oData1:"Scattered / patchy", oData3:"Partly central", oData5:"Clean & central",
+  fApi:"System access", oApi1:"No access / legacy", oApi3:"Unclear", oApi5:"API / export available",
+  apsReadout:"APS readout",
+  apsLow:"Low potential — fix the process and data foundation first, then talk automation.",
+  apsMid:"Medium potential — partial automation with a human in the loop is the realistic entry.",
+  apsHigh:"High potential — candidate for a 90-day pilot with a measured baseline.",
+  wRule:"Rules", wDig:"Input", wFmt:"Format", wData:"Data", wApi:"Access",
+  s3h:"Compliance gates", s3sub:"Four checks every German AI initiative must pass — before a tool is chosen, not after.",
+  fPd:"Personal data in the process?", fBot:"Customer-facing chatbot / AI content planned?", fHr:"Influences HR decisions (hiring, promotion)?",
+  fMon:"Could the system evaluate employee performance/behavior?", fBr:"Works council (Betriebsrat) exists?", fGs:"Trade secrets / confidential data involved?",
+  oNo:"No", oYes:"Yes",
+  gAI:"EU AI Act", gDS:"GDPR", gBR:"BetrVG § 87", gGS:"Trade secrets",
+  vOk:"Uncritical", vWarn:"Conditions", vStop:"Stop check",
+  aiOk:"Internal use, minimal risk under the AI Act.",
+  aiBot:"Transparency duty: from 2 Aug 2026 customers must be able to tell AI is answering (Art. 50 AI Act).",
+  aiHr:"High-risk classification (Annex III, employment). After the Omnibus agreement, obligations apply from Dec 2027 — deferral is not exemption. Recommendation: AI assists, a human demonstrably decides. Not a quick win.",
+  dsOk:"No personal data indicated.",
+  dsWarn:"Data-processing agreement with the vendor, prefer EU hosting, DPIA check, no customer data in consumer AI accounts.",
+  brOk:"No monitoring capability or no works council — document the note.",
+  brWarn:"Co-determination applies: involve the works council BEFORE the pilot, not after. Prepare a works agreement.",
+  gsOk:"No confidential data indicated.",
+  gsWarn:"Check tool settings (training/retention) and define output review before anything is sent out.",
+  stand:"Regulatory status: mid-2026 (AI Act incl. Digital Omnibus agreement, May 2026). Verify before client use. Not legal advice.",
+  s4h:"Business case — the math in the open", s4sub:"Every assumption is visible and adjustable. If even the worst case stays positive, the decision is easy.",
+  fGrad:"Automation share %", fSetup:"One-off setup (€)", fLic:"Licences €/year", fCare:"Maintenance h/month", fTrain:"One-off training (€)",
+  roiReadout:"ROI readout — formula with your numbers",
+  scWorst:"Worst −30 %", scBase:"Base", scBest:"Best +30 %",
+  kvCost1:"Year-1 cost (setup + licences + maintenance + training)", kvRun:"Running cost / year", kvNet:"Net benefit year 1 (base)", kvPay:"Payback",
+  months:"months", never:"— (no payback under these assumptions)",
+  qQw:"Quick win — start a 90-day pilot with a measured baseline.",
+  qSw:"Strategic bet — value is high, feasibility isn't yet. Fix data/system access first.",
+  qSp:"Later — feasible, but the value doesn't justify a project right now.",
+  qFw:"Hands off — neither value nor feasibility supports it. Find a simpler fix.",
+  qCp:"Compliance first, then pilot — the high-risk classification makes this a governance project, not a quick win.",
+  fundReadout:"Funding note",
+  fundDE:"As of mid-2026: \"Digital Jetzt\" (ended 2023) and \"go-digital\" (ended 2024) are gone. Live channels: Mittelstand-Digital centres (free consulting), BAFA consulting subsidy (until 31 Dec 2026), research allowance (Forschungszulage), ZIM, KfW digitalization loan, state programmes.",
+  fundBW:" For Baden-Württemberg: check current L-Bank / state offerings.",
+  fundRule:" Golden rule: apply BEFORE the project starts — a signed contract before approval kills eligibility. Verify programme status before advising.",
+  fundXX:"Funding notes apply to Germany. Elsewhere: check local digitalization programmes.",
+  s5h:"AI analysis & next steps", s5sub:"Steps 01–04 are deterministic logic — they run without AI. This is where the agent takes over: qualitative assessment, simpler alternatives, concrete next steps.",
+  aiBtn:"Run AI analysis", aiBtnLoad:"Analyzing …", aiLink:"Open full version in Claude", copyBtn:"Copy result & open contact",
+  aiOutTitle:"Agent analysis (demo model)",
+  aiFail:"The AI analysis doesn't run in this environment (no API access on static pages). The calculations above are unaffected.",
+  aiFailLink:"For the full AI analysis: open the Claude version (a free Claude account is enough).",
+  needProcess:"Please name a process in step 01 first.",
+  copied:"Summary copied — contact page opening.",
+  copyFail:"Copy failed — summary shown below instead.",
+  archH:"Under the hood",
+  archSub:"This demo is the condensed version of a delivery agent (skill architecture) I built for digitalization and AI consulting in the German Mittelstand. The full version works in six phases with a defined artifact per phase:",
+  p0:"0 Intake", p1:"1 Process diagnosis", p2:"2 Use-case portfolio", p3:"3 Tool evaluation", p4:"4 Business case & roadmap", p5:"5 Adoption & governance",
+  archNote:"Four compliance gates (AI Act · GDPR · BetrVG § 87 · trade secrets) run on every use case. Core principles: diagnosis before tool selection, visible math, labelled assumptions — and \"no AI needed\" is a valid answer.",
+  disclaimer:"Demo tool. Results are indicative, based on your inputs and labelled assumptions. Not legal or tax advice.",
+  sumTitle:"AI Potential Check — result", sumProc:"Process", sumAps:"APS", sumGrad:"Automation share (assumption)", sumBen:"Annual benefit (base)", sumPay:"Payback", sumGates:"Gates", sumVerdict:"Verdict"
+}};
+
+function t(k){ return (T[LANG] && T[LANG][k]) || T.de[k] || k; }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  var nodes = document.querySelectorAll("[data-i18n]");
+  for (var i=0;i<nodes.length;i++){ nodes[i].innerHTML = t(nodes[i].getAttribute("data-i18n")); }
+  var phs = document.querySelectorAll("[data-i18n-ph]");
+  for (var j=0;j<phs.length;j++){ phs[j].setAttribute("placeholder", t(phs[j].getAttribute("data-i18n-ph"))); }
+  document.getElementById("langDe").classList.toggle("active", LANG==="de");
+  document.getElementById("langEn").classList.toggle("active", LANG==="en");
+  document.getElementById("langDe").setAttribute("aria-pressed", LANG==="de");
+  document.getElementById("langEn").setAttribute("aria-pressed", LANG==="en");
+  render();
+}
+
+/* ================= HELPERS ================= */
+function $(id){ return document.getElementById(id); }
+function num(id){ var v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
+function euro(v){
+  var loc = LANG==="de" ? "de-DE" : "en-US";
+  return new Intl.NumberFormat(loc,{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Math.round(v));
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function toast(msg){
+  var el = $("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove("show"); }, 2600);
+}
+
+/* ================= CORE LOGIC ================= */
+var gradTouched = false;
+
+function calcAPS(){
+  var w = { rule:.30, dig:.25, fmt:.15, data:.15, api:.15 };
+  var vals = { rule:num("rule"), dig:num("dig"), fmt:num("fmt"), data:num("data"), api:num("api") };
+  var aps = vals.rule*w.rule + vals.dig*w.dig + vals.fmt*w.fmt + vals.data*w.data + vals.api*w.api;
+  return { aps: Math.round(aps*10)/10, vals: vals, w: w };
+}
+function suggestedGrad(aps){
+  if (aps>=4.5) return 80; if (aps>=3.5) return 65; if (aps>=2.5) return 45; if (aps>=1.5) return 25; return 10;
+}
+function calcGates(){
+  var pd=$("pd").value==="ja", bot=$("bot").value==="ja", hr=$("hr").value==="ja",
+      mon=$("mon").value==="ja", br=$("br").value==="ja", gs=$("gs").value==="ja";
+  var g = [];
+  if (hr)      g.push({name:t("gAI"), cls:"g-stop", verdict:t("vStop"), note:t("aiHr"), level:2});
+  else if (bot)g.push({name:t("gAI"), cls:"g-warn", verdict:t("vWarn"), note:t("aiBot"), level:1});
+  else         g.push({name:t("gAI"), cls:"g-ok",   verdict:t("vOk"),   note:t("aiOk"),  level:0});
+  g.push(pd ? {name:t("gDS"), cls:"g-warn", verdict:t("vWarn"), note:t("dsWarn"), level:1}
+            : {name:t("gDS"), cls:"g-ok",   verdict:t("vOk"),   note:t("dsOk"),   level:0});
+  g.push((mon&&br) ? {name:t("gBR"), cls:"g-warn", verdict:t("vWarn"), note:t("brWarn"), level:1}
+                   : {name:t("gBR"), cls:"g-ok",   verdict:t("vOk"),   note:t("brOk"),   level:0});
+  g.push(gs ? {name:t("gGS"), cls:"g-warn", verdict:t("vWarn"), note:t("gsWarn"), level:1}
+            : {name:t("gGS"), cls:"g-ok",   verdict:t("vOk"),   note:t("gsOk"),   level:0});
+  return g;
+}
+function calcROI(){
+  var vol=num("vol"), mins=num("mins"), rate=num("rate"), grad=num("grad")/100;
+  var errq=num("errq")/100, errc=num("errc");
+  var timeBenefit = vol*12*(mins/60)*rate*grad;
+  var errBenefit  = vol*12*errq*errc*grad;
+  var benefit = timeBenefit + errBenefit;
+  var setup=num("setup"), lic=num("lic"), care=num("care")*12*rate, train=num("train");
+  var runYear = lic + care;
+  var cost1 = setup + runYear + train;
+  var monthlyNet = benefit/12 - runYear/12;
+  var payback = monthlyNet>0 ? (setup+train)/monthlyNet : null;
+  return { benefit:benefit, timeBenefit:timeBenefit, errBenefit:errBenefit, setup:setup, train:train,
+           runYear:runYear, cost1:cost1, net1:benefit-cost1, payback:payback,
+           worst:benefit*0.7-cost1, best:benefit*1.3-cost1,
+           vol:vol, mins:mins, rate:rate, gradPct:num("grad") };
+}
+function quadrant(aps, benefit, gates){
+  var red = gates.some(function(x){ return x.level===2; });
+  if (red) return {cls:"cp", txt:t("qCp"), key:"cp"};
+  if (benefit>=5000 && aps>=3.5) return {cls:"qw", txt:t("qQw"), key:"qw"};
+  if (benefit>=5000)             return {cls:"sw", txt:t("qSw"), key:"sw"};
+  if (aps>=3.5)                  return {cls:"sp", txt:t("qSp"), key:"sp"};
+  return {cls:"fw", txt:t("qFw"), key:"fw"};
+}
+
+/* ================= RENDER ================= */
+function render(){
+  var A = calcAPS();
+  $("apsVal").textContent = A.aps.toFixed(1);
+  $("apsBar").style.width = (A.aps/5*100)+"%";
+  $("apsNote").textContent = A.aps>=3.5 ? t("apsHigh") : (A.aps>=2.2 ? t("apsMid") : t("apsLow"));
+  var labels = {rule:"wRule",dig:"wDig",fmt:"wFmt",data:"wData",api:"wApi"};
+  var bh = "";
+  for (var k in A.vals){ bh += '<span class="chip">'+t(labels[k])+" "+A.vals[k]+"/5 · "+Math.round(A.w[k]*100)+"%</span>"; }
+  $("apsBreak").innerHTML = bh;
+
+  if (!gradTouched){ $("grad").value = suggestedGrad(A.aps); }
+
+  var G = calcGates();
+  var gh = "";
+  for (var i=0;i<G.length;i++){
+    gh += '<div class="gate '+G[i].cls+'"><div class="g-name">'+esc(G[i].name)+'</div>'+
+          '<div class="g-verdict"><span class="light"></span>'+esc(G[i].verdict)+'</div>'+
+          '<div class="g-note">'+esc(G[i].note)+'</div></div>';
+  }
+  $("gates").innerHTML = gh;
+
+  var R = calcROI();
+  $("formulaBox").textContent =
+    (LANG==="de" ? "Jahresnutzen = Vol × 12 × (Min ÷ 60) × Satz × Grad  (+ Fehlerersparnis)\n" :
+                   "Annual benefit = vol × 12 × (min ÷ 60) × rate × share  (+ error savings)\n") +
+    "             = "+R.vol+" × 12 × ("+R.mins+" ÷ 60) × "+R.rate+" € × "+R.gradPct+" %" +
+    (R.errBenefit>0 ? "  +  "+euro(R.errBenefit) : "") +
+    "\n             = "+euro(R.benefit)+(LANG==="de"?" / Jahr":" / year");
+
+  $("scenBox").innerHTML =
+    '<div class="scenbox"><div class="s-l">'+t("scWorst")+'</div><div class="s-v" style="color:'+(R.worst>=0?"var(--ok)":"var(--stop)")+'">'+euro(R.worst)+'</div></div>'+
+    '<div class="scenbox base"><div class="s-l">'+t("scBase")+'</div><div class="s-v" style="color:'+(R.net1>=0?"var(--ok)":"var(--stop)")+'">'+euro(R.net1)+'</div></div>'+
+    '<div class="scenbox"><div class="s-l">'+t("scBest")+'</div><div class="s-v" style="color:'+(R.best>=0?"var(--ok)":"var(--stop)")+'">'+euro(R.best)+'</div></div>';
+
+  var pay = R.payback===null ? t("never") : (Math.round(R.payback*10)/10)+" "+t("months");
+  $("kvBox").innerHTML =
+    '<div class="kv"><span>'+t("kvCost1")+'</span><b>'+euro(R.cost1)+'</b></div>'+
+    '<div class="kv"><span>'+t("kvRun")+'</span><b>'+euro(R.runYear)+'</b></div>'+
+    '<div class="kv"><span>'+t("kvNet")+'</span><b>'+euro(R.net1)+'</b></div>'+
+    '<div class="kv"><span>'+t("kvPay")+'</span><b>'+esc(pay)+'</b></div>';
+
+  var Q = quadrant(A.aps, R.benefit, G);
+  $("quadBox").className = "quad "+Q.cls;
+  $("quadBox").textContent = Q.txt;
+
+  var land = $("land").value;
+  $("fundBox").textContent = land==="XX" ? t("fundXX") : t("fundDE") + (land==="BW"?t("fundBW"):"") + t("fundRule");
+
+  var link = $("artifactLink");
+  if (ARTIFACT_URL.indexOf("REPLACE_WITH") !== 0){ link.href = ARTIFACT_URL; link.classList.remove("hidden"); }
+}
+
+/* ================= EXAMPLE ================= */
+function loadExample(){
+  $("branche").value="handwerk"; $("ma").value=12; $("land").value="BW";
+  $("prozess").value = LANG==="de" ? "Angebotserstellung" : "Quote creation";
+  $("vol").value=60; $("mins").value=35; $("rate").value=55; $("errq").value=5; $("errc").value=40;
+  $("rule").value="5"; $("dig").value="2.5"; $("fmt").value="3"; $("data").value="3"; $("api").value="3";
+  $("pd").value="ja"; $("bot").value="nein"; $("hr").value="nein"; $("mon").value="nein"; $("br").value="nein"; $("gs").value="nein";
+  gradTouched=false;
+  $("setup").value=4000; $("lic").value=900; $("care").value=2; $("train").value=500;
+  render();
+  document.getElementById("s2").scrollIntoView({behavior:"smooth"});
+}
+
+/* ================= SUMMARY / COPY ================= */
+function buildSummary(){
+  var A=calcAPS(), R=calcROI(), G=calcGates(), Q=quadrant(A.aps,R.benefit,G);
+  var gl = G.map(function(g){ return g.name+": "+g.verdict; }).join(" · ");
+  var pay = R.payback===null ? t("never") : (Math.round(R.payback*10)/10)+" "+t("months");
+  return t("sumTitle")+"\n"+
+    t("sumProc")+": "+($("prozess").value||"—")+" ("+$("branche").options[$("branche").selectedIndex].text+", "+num("ma")+" MA)\n"+
+    t("sumAps")+": "+A.aps.toFixed(1)+"/5 · "+t("sumGrad")+": "+R.gradPct+" %\n"+
+    t("sumBen")+": "+euro(R.benefit)+" · "+t("sumPay")+": "+pay+"\n"+
+    t("sumGates")+": "+gl+"\n"+
+    t("sumVerdict")+": "+Q.txt+"\n"+
+    "[digital & AI]";
+}
+function copyAndContact(){
+  var txt = buildSummary();
+  function done(){ toast(t("copied")); window.open(PORTFOLIO_CONTACT,"_blank","noopener"); }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallbackShow(txt); });
+  } else { fallbackShow(txt); }
+  function fallbackShow(s){
+    toast(t("copyFail"));
+    $("aiCard").classList.remove("hidden");
+    $("aiOut").innerHTML = "<pre style='white-space:pre-wrap;font-family:var(--mono);font-size:13px'>"+esc(s)+"</pre>";
+  }
+}
+
+/* ================= AI LAYER (Claudeception) ================= */
+var DEMO_BRAIN =
+"You are the demo layer of 'Specialist Digitalisierung & KI', a delivery agent for German SME digitalization consulting. " +
+"You receive one process assessment: inputs, an APS automation score, four compliance-gate results, and a computed business case. " +
+"Rules: analyse ONLY the data given; never invent prices, vendors' quotes, or legal dates beyond those provided; label any assumption; " +
+"a simpler non-AI fix (template, Excel, process change, existing software feature) must be considered explicitly; be blunt and quantified, no marketing filler. " +
+"Structure your answer with exactly these four section headers in the response language: " +
+"1) Einordnung / Assessment (2–3 sentences), 2) Empfehlung / Recommendation (incl. the simpler non-AI alternative and when it wins), " +
+"3) Risiken & Auflagen / Risks & conditions (from the gate results), 4) Nächste 3 Schritte / Next 3 steps (concrete, with owner and rough timing). " +
+"Formal German Sie-Form if language=de. Maximum ~300 words. Plain text with the four numbered headers, no markdown symbols.";
+
+function aiCleanup(){ var btn=$("aiBtn"); btn.disabled=false; btn.textContent=t("aiBtn"); }
+function renderAI(txt){
+  var safe = esc(txt);
+  safe = safe.replace(/^(\s*\d\)[^\n]*)$/gm, '<div class="sec-h">$1</div>');
+  safe = safe.split(/\n{2,}/).map(function(p){ return p.indexOf('sec-h')>-1 ? p : "<p>"+p.replace(/\n/g,"<br>")+"</p>"; }).join("");
+  $("aiOut").innerHTML = safe;
+}
+
+/* ================= WIRE-UP ================= */
+(function init(){
+  var inputs = document.querySelectorAll("input, select");
+  for (var i=0;i<inputs.length;i++){
+    inputs[i].addEventListener("input", function(e){
+      if (e.target.id==="grad") gradTouched = true;
+      render();
+    });
+  }
+  $("exampleBtn").addEventListener("click", loadExample);
+  $("langDe").addEventListener("click", function(){ LANG="de"; applyLang(); });
+  $("langEn").addEventListener("click", function(){ LANG="en"; applyLang(); });
+  $("copyBtn").addEventListener("click", copyAndContact);
+  $("aiBtn").addEventListener("click", function(){
+    // wrap runAI so cleanup always happens
+    try { runAI(); } catch(e){ aiCleanup(); }
+  });
+  applyLang();
+})();
+
+function runAI(){
+  if (!$("prozess").value.trim()){ toast(t("needProcess")); $("prozess").focus(); return; }
+  var btn=$("aiBtn"); btn.disabled=true; btn.textContent=t("aiBtnLoad");
+  $("aiCard").classList.remove("hidden");
+  $("aiOut").innerHTML = '<span class="spinner"></span>'+esc(t("aiBtnLoad"));
+
+  var A=calcAPS(), R=calcROI(), G=calcGates(), Q=quadrant(A.aps,R.benefit,G);
+  var payload = {
+    language: LANG,
+    industry: $("branche").value, employees: num("ma"), state: $("land").value,
+    process: $("prozess").value, casesPerMonth: R.vol, minutesPerCase: R.mins, hourlyRate: R.rate,
+    aps: A.aps, apsParts: A.vals, automationSharePct: R.gradPct,
+    gates: G.map(function(g){ return {gate:g.name, verdict:g.verdict, note:g.note}; }),
+    businessCase: { annualBenefitEUR: Math.round(R.benefit), year1CostEUR: Math.round(R.cost1),
+      netYear1EUR: Math.round(R.net1), worstEUR: Math.round(R.worst), bestEUR: Math.round(R.best),
+      paybackMonths: R.payback===null? null : Math.round(R.payback*10)/10 },
+    quadrant: Q.key
+  };
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1000,
+      system: DEMO_BRAIN,
+      messages:[{ role:"user", content:"Assessment data as JSON:\n"+JSON.stringify(payload,null,1)+"\nRespond in language: "+(LANG==="de"?"German (Sie-Form)":"English")+"." }]
+    })
+  }).then(function(r){
+    if(!r.ok){ throw new Error("HTTP "+r.status); }
+    return r.json();
+  }).then(function(data){
+    var txt = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
+    if(!txt){ throw new Error("empty"); }
+    renderAI(txt);
+    aiCleanup();
+  }).catch(function(){
+    var msg = "<p>"+esc(t("aiFail"))+"</p>";
+    if (ARTIFACT_URL.indexOf("REPLACE_WITH") !== 0){
+      msg += "<p><a class='btn' href='"+ARTIFACT_URL+"' target='_blank' rel='noopener'>"+esc(t("aiLink"))+"</a></p>";
+      $("artifactLink").classList.remove("hidden");
+    } else {
+      msg += "<p class='note'>"+esc(t("aiFailLink"))+"</p>";
+    }
+    $("aiOut").innerHTML = msg;
+    aiCleanup();
+  });
+}
+</script>
+</body>
+</html>

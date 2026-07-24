@@ -214,6 +214,29 @@
          font-family:var(--mono);font-size:.7rem;color:var(--muted)}
   footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
 
+  /* ============ mail preview (secretary draft) ============ */
+  .rlead{font-size:.9rem;color:var(--body);margin:6px 0 16px}
+  .mail-preview{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:6px 16px;margin:0 0 18px;box-shadow:0 4px 14px -10px rgba(17,26,43,.2)}
+  .mp-row{display:grid;grid-template-columns:82px 1fr auto;gap:12px;align-items:start;
+    padding:11px 0;border-bottom:1px dashed var(--line)}
+  .mp-row:last-child{border-bottom:0}
+  .mp-label{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);padding-top:4px;line-height:1.3}
+  .mp-value{font-size:.9rem;color:var(--ink);word-break:break-word;line-height:1.5;min-height:1.4em}
+  .mp-body{font-family:var(--sans);white-space:pre-wrap;margin:0;background:transparent;border:0;
+    padding:0;font-size:.9rem;color:var(--ink);line-height:1.6}
+  .mp-copy{appearance:none;background:transparent;border:1px solid var(--line-2);border-radius:4px;
+    font-family:var(--mono);font-size:.66rem;color:var(--muted);padding:5px 9px;cursor:pointer;
+    line-height:1;transition:color .18s ease,border-color .18s ease;align-self:start;white-space:nowrap}
+  .mp-copy:hover{color:var(--accent);border-color:var(--accent)}
+  .rlinks{display:flex;gap:14px;flex-wrap:wrap}
+  #rcopyall{cursor:pointer}
+  @media (max-width:520px){
+    .mp-row{grid-template-columns:1fr auto;gap:6px 12px}
+    .mp-label{grid-column:1/-1;padding-top:0}
+  }
+
   /* ============ command palette ============ */
   .cmdk{position:fixed;inset:0;z-index:60;display:none}
   .cmdk.open{display:block}
@@ -511,9 +534,30 @@
           <p class="rc" id="rcat">—</p>
           <p class="rconf" id="rconf"></p>
           <p class="rwhy" id="rwhy"></p>
+
+          <p class="rlead" data-i="r_lead">Draft ready. Open it in your mail app, or copy the fields into any web mail.</p>
+
+          <div class="mail-preview">
+            <div class="mp-row">
+              <span class="mp-label" data-i="mp_to">To</span>
+              <span class="mp-value" id="mpTo">walid.mohmed@gmail.com</span>
+              <button class="mp-copy" type="button" data-target="mpTo" data-i="mp_copy">Copy</button>
+            </div>
+            <div class="mp-row">
+              <span class="mp-label" data-i="mp_subj">Subject</span>
+              <span class="mp-value" id="mpSubj">—</span>
+              <button class="mp-copy" type="button" data-target="mpSubj" data-i="mp_copy">Copy</button>
+            </div>
+            <div class="mp-row mp-body-row">
+              <span class="mp-label" data-i="mp_msg">Message</span>
+              <pre class="mp-value mp-body" id="mpBody">—</pre>
+              <button class="mp-copy" type="button" data-target="mpBody" data-i="mp_copy">Copy</button>
+            </div>
+          </div>
+
           <div class="rlinks">
-            <a id="rsend" href="mailto:walid.mohmed@gmail.com" data-i="r_send">Send this note ↗</a>
-            <a href="mailto:walid.mohmed@gmail.com" data-copy="walid.mohmed@gmail.com" data-i="r_copy">or copy my email</a>
+            <a id="rsend" href="mailto:walid.mohmed@gmail.com" class="btn" data-i="r_send">Open in mail app ↗</a>
+            <button id="rcopyall" class="btn" type="button" data-i="r_copyall">Copy full email</button>
           </div>
         </div>
       </div>
@@ -707,22 +751,28 @@
   var CATS=[
     {en:"Monitoring & Evaluation",de:"Monitoring & Evaluierung",
      ren:"an M&E design, framework or evaluation",rde:"eine M&E-Konzeption, ein Framework oder eine Evaluierung",
-     kw:["monitor","evaluat","m&e","mel","indicator","logframe","baseline","endline","results framework","results-based","rbm","kpi","impact","theory of change","outcome","kobo","data collection","survey","verification","evaluierung","indikator","wirkung","basiserhebung","datenerhebung","umfrage","ergebnisrahmen"]},
+     phrase:{en:"an M&E design or evaluation",de:"eine M&E-Konzeption oder Evaluierung"},
+     kw:["monitoring and evaluation","monitor","evaluat","m&e","mel","indicator","logframe","log frame","baseline","endline","midline","results framework","results-based","results based","rbm","kpi","impact","impact assessment","theory of change","toc","outcome mapping","outcome harvest","kobo","kobotoolbox","odk","surveycto","data collection","data quality","dqa","verification","evaluierung","indikator","wirkung","basiserhebung","endlinienstudie","datenerhebung","umfrage","ergebnisrahmen","wirkungslogik"]},
     {en:"Project & Programme Development",de:"Projekt- & Programmentwicklung",
      ren:"designing or developing a programme",rde:"die Entwicklung eines Programms oder Projekts",
-     kw:["proposal","concept note","programme design","program design","project design","inception","feasibility","scoping","consortium","bid","tender","expression of interest","eoi","letter of interest","loi","design a program","develop a program","new programme","new program","konzeptnote","antrag","ausschreibung","angebot","projektentwicklung","programmentwicklung","machbarkeit","interessenbekundung"]},
+     phrase:{en:"project and programme development",de:"Projekt- und Programmentwicklung"},
+     kw:["project development","programme development","program development","project design","programme design","program design","project concept","programme concept","proposal","concept note","inception","feasibility","scoping","consortium","form a consortium","bid","tender","expression of interest","eoi","letter of interest","loi","design a program","develop a program","new programme","new program","projektentwicklung","programmentwicklung","projektkonzept","programmkonzept","konzeptnote","antrag","ausschreibung","angebot","machbarkeit","interessenbekundung","konsortium"]},
     {en:"Operational Delivery / PMO",de:"Operative Umsetzung / PMO",
      ren:"running delivery or setting up a PMO",rde:"operative Umsetzung oder PMO-Aufbau",
-     kw:["delivery","operation","pmo","work plan","workplan","milestone","timeline","coordination","implementation","compliance","reporting","stage-gate","portfolio","project management","schedule","risk register","budget","umsetzung","steuerung","meilenstein","zeitplan","koordination","berichtswesen","risikoregister","projektleitung","arbeitsplan"]},
+     phrase:{en:"delivery or PMO support",de:"operative Umsetzung oder PMO-Unterstützung"},
+     kw:["delivery","operation","pmo","pmo setup","project delivery","programme delivery","work plan","workplan","milestone","gantt","critical path","timeline","coordination","implementation","compliance","reporting","stage-gate","stage gate","portfolio","project management","schedule","risk register","budget","steering committee","umsetzung","steuerung","meilenstein","zeitplan","koordination","berichtswesen","risikoregister","projektleitung","arbeitsplan","lenkungsausschuss"]},
     {en:"Business Development & Partnerships",de:"Business Development & Partnerschaften",
      ren:"partnerships, funding or business development",rde:"Partnerschaften, Förderung oder Business Development",
-     kw:["partnership","partner","donor","grant","funding","fundrais","business development","private sector","investment","deal","client","contract","funder","consulting","opportunity to work","partnerschaft","geber","förderung","finanzierung","geschäftsentwicklung","privatsektor","zusammenarbeit","auftrag","kunde"]},
+     phrase:{en:"business development or a partnership",de:"Business Development oder eine Partnerschaft"},
+     kw:["partnership","partner up","team up","joint venture","donor","grant","funding","fundrais","business development","private sector","investment","client","contract","funder","consulting engagement","consulting assignment","consulting opportunity","collaborate","collaboration","opportunity to work","cooperation","partnerschaft","geber","förderung","finanzierung","geschäftsentwicklung","privatsektor","zusammenarbeit","kooperation","auftrag","kunde","kooperationsanfrage"]},
     {en:"Digital & AI / Automation",de:"Digital & KI / Automatisierung",
      ren:"a digital or AI build",rde:"ein Digital- oder KI-Vorhaben",
-     kw:[" ai ","a.i"," ki ","künstliche intelligenz","artificial intelligence","agent","automat","digital","dashboard","tool"," app "," apps ","software","prompt","model","chatbot","workflow","llm","classifier","werkzeug","arbeitsablauf"]},
+     phrase:{en:"a digital or AI initiative",de:"ein Digital- oder KI-Vorhaben"},
+     kw:[" ai ","a.i","artificial intelligence"," ki ","künstliche intelligenz","agent","automat","automation","digital","digitalisierung","dashboard","tool"," app "," apps ","software","prompt","model","chatbot","chat bot","workflow","llm","classifier","no-code","no code","low-code","low code","n8n","make.com","zapier","chatgpt","claude","werkzeug","arbeitsablauf"]},
     {en:"Role / opportunity",de:"Stelle / Rolle",
      ren:"a role or opportunity",rde:"eine Stelle oder Anfrage zu einer Rolle",
-     kw:["hiring","role","position","vacancy","job","recruit","opening","join our","full-time","part-time","cv","resume","interview","apply","candidate","we are looking for"," stelle","stellenangebot","bewerbung","vakanz","einstellung","vollzeit","teilzeit","lebenslauf","vorstellungsgespräch","wir suchen","gesucht"]}
+     phrase:{en:"a potential role or opportunity",de:"eine potenzielle Stelle oder Rolle"},
+     kw:["hiring","hire you","role","position","vacancy","job ","recruit","opening","join our","full-time","full time","part-time","part time"," cv","resume","interview","apply","candidate","we are looking for","we're looking for","would you consider","we have an opening","we have a role"," stelle","stellenangebot","bewerbung","vakanz","einstellung","vollzeit","teilzeit","lebenslauf","vorstellungsgespräch","wir suchen","gesucht"]}
   ];
   var GEN={en:{l:"General enquiry",w:"I couldn't pin it to one area — send it over and I'll read it myself."},
            de:{l:"Allgemeine Anfrage",w:"Ich konnte die Anfrage keinem Bereich eindeutig zuordnen — senden Sie sie einfach, ich lese sie selbst."}};
@@ -732,12 +782,26 @@
   }
   function classifyLocal(text){
     var t=" "+text.toLowerCase()+" ",best=null,hits=[],bs=0,total=0;
-    CATS.forEach(function(c){var s=0,h=[];c.kw.forEach(function(k){if(t.indexOf(k)>-1){s+=k.length>6?2:1;if(h.length<3)h.push(k.trim());}});total+=s;if(s>bs){bs=s;best=c;hits=h;}});
-    if(!best||bs===0)return{label:GEN[LANG].l,conf:"",why:GEN[LANG].w};
+    CATS.forEach(function(c){
+      var s=0,h=[];
+      /* exact category-name mention is a very strong signal */
+      var nameLC=c.en.toLowerCase();
+      if(t.indexOf(nameLC)>-1){ s+=8; h.push(c.en); }
+      c.kw.forEach(function(k){
+        if(t.indexOf(k)>-1){
+          var w = k.length>=15?4:(k.length>=10?3:(k.length>6?2:1));
+          s+=w;
+          if(h.length<3)h.push(k.trim());
+        }
+      });
+      total+=s;
+      if(s>bs){bs=s;best=c;hits=h;}
+    });
+    if(!best||bs===0)return{cat:null,label:GEN[LANG].l,conf:"",why:GEN[LANG].w};
     var share=total?bs/total:1;
     var pre=LANG==="de"?"Klingt nach ":"Reads like ";
     var seen=LANG==="de"?" — erkannt an \"":" — picked up on \"";
-    return{label:(LANG==="de"?best.de:best.en),conf:confStr(share),
+    return{cat:best,label:(LANG==="de"?best.de:best.en),conf:confStr(share),
            why:pre+(LANG==="de"?best.rde:best.ren)+(hits.length?seen+hits.join("\", \"")+"\".":".")};
   }
   async function classifyLLM(text){
@@ -751,14 +815,63 @@
     var lbl=match?(LANG==="de"?match.de:match.en):(j.category==="General enquiry"?GEN[LANG].l:j.category);
     var suffix=LANG==="de"?" · Live-Modell":" · live model";
     var conf=(j.confidence>=.75?confStr(.7):(j.confidence>=.5?confStr(.5):confStr(.2)))+suffix;
-    return{label:lbl,conf:conf,why:j.rationale||""};
+    return{cat:match,label:lbl,conf:conf,why:j.rationale||""};
   }
   var run=document.getElementById("run"),msg=document.getElementById("msg"),
       result=document.getElementById("result"),rcat=document.getElementById("rcat"),
       rconf=document.getElementById("rconf"),rwhy=document.getElementById("rwhy"),
       rsend=document.getElementById("rsend");
+  var mpTo=document.getElementById("mpTo"),mpSubj=document.getElementById("mpSubj"),
+      mpBody=document.getElementById("mpBody");
+
+  function extractName(text){
+    var m;
+    m=text.match(/(?:my name is|i am|i'm|this is|it's)\s+([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)/i);
+    if(m) return m[1];
+    m=text.match(/(?:mein name ist|ich bin|ich heiße)\s+([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)/i);
+    if(m) return m[1];
+    var lines=text.split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+    if(lines.length){
+      var last=lines[lines.length-1].replace(/^[-–—]+\s*/,"").trim();
+      if(last.length<40 && /^[A-ZÄÖÜ][a-zäöüßA-ZÄÖÜ\s\.\-]{1,38}$/.test(last)) return last;
+    }
+    return null;
+  }
+  function isShortInput(text){
+    var w=text.trim().split(/\s+/).length;
+    return w<=8 && !/[\.\!\?]/.test(text);
+  }
+  function buildDraft(r,text){
+    var name=extractName(text), c=r.cat;
+    var nm = name || (LANG==="de"?"[Ihr Name]":"[Your name]");
+    var subject, body;
+    if(!c){
+      subject = LANG==="de" ? "Anfrage über die Portfolio-Website" : "Portfolio enquiry";
+      body = LANG==="de"
+        ? "Hallo Walid,\n\n"+text.trim()+"\n\nViele Grüße\n"+nm
+        : "Hi Walid,\n\n"+text.trim()+"\n\nBest regards,\n"+nm;
+    } else if(isShortInput(text)){
+      subject = LANG==="de" ? "Anfrage: "+c.phrase.de : "Enquiry about "+c.phrase.en;
+      body = LANG==="de"
+        ? "Hallo Walid,\n\nich melde mich zum Thema "+c.phrase.de+" ("+text.trim()+"). "
+          +"Können wir kurz telefonieren?\n\nViele Grüße\n"+nm
+        : "Hi Walid,\n\nI'm reaching out about "+c.phrase.en+" ("+text.trim()+"). "
+          +"Could we set up a short call to discuss?\n\nBest regards,\n"+nm;
+    } else {
+      subject = LANG==="de" ? "Anfrage: "+c.phrase.de : "Enquiry about "+c.phrase.en;
+      body = LANG==="de"
+        ? "Hallo Walid,\n\n"+text.trim()+"\n\nIch freue mich auf Ihre Rückmeldung.\n\nViele Grüße\n"+nm
+        : "Hi Walid,\n\n"+text.trim()+"\n\nLooking forward to hearing back.\n\nBest regards,\n"+nm;
+    }
+    return { to:"walid.mohmed@gmail.com", subject:subject, body:body };
+  }
   function render(r,text){
-    rsend.href="mailto:walid.mohmed@gmail.com?subject="+encodeURIComponent("["+r.label+"] Portfolio enquiry")+"&body="+encodeURIComponent(text);
+    var d=buildDraft(r,text);
+    if(mpTo) mpTo.textContent=d.to;
+    if(mpSubj) mpSubj.textContent=d.subject;
+    if(mpBody) mpBody.textContent=d.body;
+    rsend.href="mailto:"+d.to+"?subject="+encodeURIComponent(d.subject)+"&body="+encodeURIComponent(d.body);
+    window.__lastDraft=d;
     result.classList.add("show");
     if(rm){ rcat.textContent=r.label; rconf.textContent=r.conf||""; rwhy.textContent=r.why||""; return; }
     rcat.textContent=""; rconf.textContent=""; rwhy.textContent="";
@@ -791,6 +904,33 @@
   }
   run.addEventListener("click",go);
   msg.addEventListener("keydown",function(e){ if((e.metaKey||e.ctrlKey)&&e.key==="Enter") go(); });
+
+  /* per-field copy buttons inside the mail preview */
+  [].forEach.call(document.querySelectorAll(".mp-copy"),function(b){
+    b.addEventListener("click",function(){
+      var el=document.getElementById(b.getAttribute("data-target")); if(!el) return;
+      var v=el.textContent||"";
+      copyTxt(v,function(){
+        var done=LANG==="de"?"Kopiert ✓":"Copied ✓";
+        showToast(done);
+        var old=b.textContent; b.textContent=done;
+        setTimeout(function(){ b.textContent=old; },1400);
+      });
+    });
+  });
+
+  /* copy the whole email (To / Subject / blank line / Body) as one block */
+  var rcopyall=document.getElementById("rcopyall");
+  if(rcopyall){
+    rcopyall.addEventListener("click",function(){
+      var d=window.__lastDraft; if(!d) return;
+      var toL=LANG==="de"?"An":"To", subjL=LANG==="de"?"Betreff":"Subject";
+      var full=toL+": "+d.to+"\n"+subjL+": "+d.subject+"\n\n"+d.body;
+      copyTxt(full,function(){
+        showToast(LANG==="de"?"E-Mail kopiert ✓":"Email copied ✓");
+      });
+    });
+  }
 
   /* ---------- i18n ---------- */
   var DE={
@@ -858,7 +998,10 @@
     c_p:'Beschreiben Sie in ein, zwei Sätzen, worum es geht. Mein Intake-Agent liest die Nachricht, ordnet sie ein — M&amp;E, Projektentwicklung, Umsetzung, Business Development, Digital &amp; KI oder Stelle — und leitet sie mit passender Betreffzeile weiter.',
     c_btn:'Einordnen &amp; weiterleiten',
     c_hint:'Läuft im Browser · nichts wird gesendet, bis Sie es möchten',
-    r_k:'Eingeordnet als', r_send:'Nachricht senden ↗', r_copy:'oder E-Mail-Adresse kopieren',
+    r_k:'Eingeordnet als', r_send:'In Mail-App öffnen ↗',
+    r_lead:'Entwurf bereit. In der Mail-App öffnen oder die Felder in ein beliebiges Webmail kopieren.',
+    mp_to:'An', mp_subj:'Betreff', mp_msg:'Nachricht', mp_copy:'Kopieren',
+    r_copyall:'Ganze E-Mail kopieren',
     ft:'Konzipiert &amp; gebaut von Walid SayedAhmed'
   };
   var ATTRS={

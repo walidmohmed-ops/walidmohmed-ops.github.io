@@ -24,22 +24,40 @@
      --indigo-txt #8B84F5 5.50:1  ·  raw --indigo #4F46E5 is 2.73:1 and is
      therefore used ONLY for fills, bars and gradients — never for text. */
   :root{
-    --charcoal:#1C1C1E; --surface:#242428; --surface2:#2C2C32;
-    --indigo:#4F46E5; --indigo-txt:#8B84F5; --indigo-dim:#3730A3;
-    --gold:#C9A84C; --gold-dim:#8A6F2E;
-    --rule:#2E2E33; --rule-2:#3A3A41;
-    --text:#E8E8ED; --muted:#8E8E99;
-    /* legacy aliases — keep every un-rewritten rule working */
-    --bg:#1C1C1E; --panel:#242428; --ink:#E8E8ED; --sub:#B4B4BE; --body:#A9A9B4;
-    --accent:#8B84F5; --tint:rgba(79,70,229,.12); --tint-2:rgba(79,70,229,.24);
-    --line:#2E2E33; --line-2:#3A3A41;
+    /* ---- layer 1: primitives — raw values, referenced only by layer 2 ---- */
+    --p-charcoal:#1C1C1E; --p-graphite:#242428; --p-slate:#2C2C32;
+    --p-indigo:#4F46E5; --p-indigo-lift:#8B84F5; --p-indigo-deep:#3730A3;
+    --p-gold:#C9A84C; --p-gold-deep:#8A6F2E;
+    --p-hair:#2E2E33; --p-hair-lift:#3A3A41;
+    --p-bone:#E8E8ED; --p-ash:#8E8E99; --p-fog:#B4B4BE; --p-mist:#A9A9B4;
+    --p-display:"Syne",system-ui,sans-serif;
+    --p-sans:"DM Sans",system-ui,-apple-system,sans-serif;
+    --p-mono:"JetBrains Mono",ui-monospace,monospace;
+
+    /* ---- layer 2: semantics — what a value means, not what it is ---- */
+    --bg:var(--p-charcoal); --panel:var(--p-graphite);
+    --ink:var(--p-bone); --sub:var(--p-fog); --body:var(--p-mist);
+    --muted:var(--p-ash); --text:var(--p-bone);
+    --accent:var(--p-indigo-lift); --accent-solid:var(--p-indigo);
+    --focus:var(--p-gold);
+    --tint:rgba(79,70,229,.12); --tint-2:rgba(79,70,229,.24);
+    --line:var(--p-hair); --line-2:var(--p-hair-lift);
+    --display:var(--p-display); --sans:var(--p-sans); --mono:var(--p-mono);
+
+    /* ---- layer 3: component tokens + back-compat aliases ----
+       every name below predates the refactor; keep them so none of the
+       1272 lines break. */
+    --charcoal:var(--p-charcoal); --surface:var(--p-graphite);
+    --surface2:var(--p-slate);
+    --indigo:var(--p-indigo); --indigo-txt:var(--p-indigo-lift);
+    --indigo-dim:var(--p-indigo-deep);
+    --gold:var(--p-gold); --gold-dim:var(--p-gold-deep);
+    --rule:var(--p-hair); --rule-2:var(--p-hair-lift);
     --shadow:0 18px 40px -22px rgba(0,0,0,.75);
     --navbg:rgba(36,36,40,.92);
-    --display:"Syne",system-ui,sans-serif;
-    --sans:"DM Sans",system-ui,-apple-system,sans-serif;
-    --mono:"JetBrains Mono",ui-monospace,monospace;
     --rail-w:220px; --nav-h:0px;
-    --ease:cubic-bezier(.645,.045,.355,1)
+    --ease:cubic-bezier(.645,.045,.355,1);
+    --focus-ring:2px solid var(--focus); --focus-offset:3px
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -261,7 +279,7 @@
     border:0;border-bottom:1px solid var(--rule-2);padding:8px 2px 12px;font-family:var(--mono);
     font-size:.85rem;line-height:1.6}
   .intake textarea::placeholder{color:var(--muted)}
-  .intake textarea:focus{outline:none;border-color:var(--gold-dim)}
+  .intake textarea:focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-offset);border-color:var(--gold-dim)}
   .liveline{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;
     color:var(--muted);margin:10px 0 0;min-height:1.2em}
   .liveline b{color:var(--gold);font-weight:400}
@@ -313,7 +331,7 @@
   .cmdk input{width:100%;border:0;border-bottom:1px solid var(--rule);padding:15px 17px;
     font:400 .9rem/1.4 var(--mono);color:var(--text);background:transparent}
   .cmdk input::placeholder{color:var(--muted)}
-  .cmdk input:focus{outline:none}
+  .cmdk input:focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-offset)}
   .cmdk ul{list-style:none;margin:0;padding:6px;max-height:300px;overflow:auto}
   .cmdk li{display:flex;justify-content:space-between;align-items:center;gap:14px;
     padding:10px 12px;border-radius:3px;cursor:pointer;font-size:.88rem;color:var(--sub)}
@@ -339,7 +357,7 @@
     html{scroll-behavior:auto} *{transition:none!important;animation:none!important}
     .js .fade{opacity:1!important;transform:none!important}
   }
-  a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  a:focus-visible,button:focus-visible,textarea:focus-visible,input:focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-offset)}
 
   /* ============ rail collapses to a top bar on narrow screens ============ */
   /* Direction A hides the rail entirely below 900px. That would take the
